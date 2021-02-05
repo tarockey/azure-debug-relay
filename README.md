@@ -7,16 +7,25 @@ AzDebugRelay uses [debugpy](https://github.com/microsoft/debugpy) and [Azure Rel
 1. You local Visual Studio Code debugger in `listen` mode.
 1. You remote code in `attach` mode.
 
-The debugging tunnel is handled by [Azure Relay Bridge](https://github.com/vladkol/azure-relay-bridge) utility which is downloaded and installed autimatically by AzDebugRelay.
+Both machines can be isolated behind NAT or virtual networks - all they need is to be able to connect to Azure Relay resource.
+Azure Relay carries a secure tunnel, just as if these machines were in the same VPN.
+
+![Azure Relay Debugging Bridge](images/debug-relay-diagram.png)
+
+The debugging tunnel is handled by [Azure Relay Bridge](https://github.com/vladkol/azure-relay-bridge) utility which is downloaded and installed automatically by AzDebugRelay. Azure Relay Bridge can maintain secure TCP and UDP tunnels for different purposes.
+AzDebugRelay is a collection of helpers for VS Code and Python that makes easier to use Azure Relay Bridge for debugging remote code.
+
+> We currently use a private fork of [Azure Relay Bridge](https://github.com/Azure/azure-relay-bridge) repo.
 
 ## Requirements
 
 * Python 3.6+
 * debugpy
 
-Azure Relay Bridge tool is a .NET Core application, so you may need  to istall `apt-transport-https` and other .NET Core 3.1 Runtime prerequisites on [Linux](https://docs.microsoft.com/en-us/dotnet/core/install/linux) and [Windows](https://docs.microsoft.com/en-us/dotnet/core/install/windows?tabs=netcore31).
+Azure Relay Bridge tool is a .NET Core application, so you may need  to install `apt-transport-https` and other .NET Core 3.1 Runtime prerequisites on [Linux](https://docs.microsoft.com/en-us/dotnet/core/install/linux) and [Windows](https://docs.microsoft.com/en-us/dotnet/core/install/windows?tabs=netcore31).
 
 > You don't have to install .NET Runtime itself - Azure Relay Bridge build are self-contained.
+
 ### Supported Operating Systems
 
 * Ubuntu 18+
@@ -34,9 +43,9 @@ Before you start debugging with AzDebugRelay, there are 3 places you configure i
 
 ### In Azure Portal
 
-1. [Create Azure Relay resource](https://ms.portal.azure.com/#create/Microsoft.Relay).
+1. [Create Azure Relay resource](https://ms.portal.azure.com/#create/Microsoft.Relay). Better make one in a region closest to your location.
 1. Once created, switch to the resource, and select `Hybrid Connections` option in the vertical panel.
-1. Add a hybrid connection (`+ Hybrid Connection` button), give it a memorable name (e.g. `test`) - this is your **Relay Name**.
+1. Add a hybrid connection (`+ Hybrid Connection` button), give it a memorable name (e.g. `test` 🙂) - this is your **Relay Name**.
 1. Switch to that new hybrid connection, then select `Shared Access Policies` in the vertical panel.
 1. Add a new policy with `Send` and `Listen` permissions.
 1. Once created, copy its `Primary Connection String`, this is your **Connection String**.
@@ -45,11 +54,11 @@ Every debug session requires a separate hybrid connection. Once a session is ove
 
 ### Locally and Remotely
 
-Create `azrelay.json` file in your workspace directory (next to `remote_server_demo.py` files),
+Create `azrelay.json` file in your workspace directory or whatever directory will be "current" (next to `remote_server_demo.py` files),
 and set 2 variables:
 
 1. `AZRELAY_CONNECTION_STRING` to your **Connection String**.
-1. `AZRELAY_NAME` to your **Releay Name**.
+1. `AZRELAY_NAME` to your **Relay Name**.
 
 For example:
 
@@ -66,14 +75,17 @@ For example:
 
 ### Locally in Visual Studio Code
 
-This step must be done before launching the remote demo.
+This step must be done before launching the remote code.
 
-1. Configure `.vscode/tasks.json` with `azrelaybridge-listen` and `azrelaybridge-stop` tasks as in this repo's `.vscode/tasks.json`.
-1. Configure `.vscode/launch.json` with `Python: Listen` configuration as in this repo's `.vscode/launch.json`.
 1. Open `remote_server_demo.py` and put a breakpoint in `do_work()` function.
 1. Start debugging in your local Visual Studio Code in `Python: Listen` configuration.
 
-### Remote Demo
+If you are doing this on tops of your own code:
+
+1. Configure `.vscode/tasks.json` with `azrelaybridge-listen` and `azrelaybridge-stop` tasks as in this repo's `.vscode/tasks.json`.
+1. Configure `.vscode/launch.json` with `Python: Listen` configuration as in this repo's `.vscode/launch.json`.
+
+### Remote Machine
 
 1. Clone the repo.
 1. Start `python3 remote_server_demo.py --debug=attach`.
@@ -84,16 +96,22 @@ If everything works as it's supposed to, you will hit a breakpoint in your local
 
 `remote_server_demo.py` shows how you can use AzDebugRelay with your code.
 
-azdebugrelay package contains DebugRelay class that install and launches Azure Relay Bridge:
+**azdebugrelay** package contains DebugRelay class that install and launches Azure Relay Bridge:
 
 ```python
 from azdebugrelay import DebugRelay, DebugMode
+
+access_key_or_connection_string = "AZURE RELAY HYBRID CONNECTION STRING OR ACCESS KEY"
+relay_name = "RELAY NAME" # your Hybrid Connection name
+debug_mode = DebugMode.Connect # or DebugMode.WaitForConnection if connecting from another end
+hybrid_connection_url = "HYBRID CONNECTION URL" # can be None if access_key_or_connection_string is a connection string
+port = 5678 # any available port that you can use within your machine
 
 debug_relay = DebugRelay(access_key_or_connection_string, relay_name, debug_mode, hybrid_connection_url, port)
 debug_relay.open()
 
 # attach to a remote debugger (usually from remote server code) with debug_mode = DebugMode.Connect
-debugpy.connect(("127.0.0.1", 5678))
+debugpy.connect(("127.0.0.1", port))
 
 # Debug, debug, debug
 # ...
@@ -102,7 +120,7 @@ debugpy.connect(("127.0.0.1", 5678))
 debug_relay.close()
 ```
 
-* `access_key_or_connection_string` - Access Key or Connection String for Azure Relay Hybrid Connection. Must have `Send` and `Listen` permissions
+* `access_key_or_connection_string` - SAS Policy key or Connection String for Azure Relay Hybrid Connection. Must have `Send` and `Listen` permissions
 * `relay_name` - name of the Hybrid Connection
 * `debug_mode` - debug connection mode. `DebugMode.WaitForConnection` when starting in listening mode, `DebugMode.Connect` for attaching to a remote debugger.
 * `hybrid_connection_url` - Hybrid Connection URL. Required when access_key_or_connection_string as an access key, otherwise is ignored and may be None.
