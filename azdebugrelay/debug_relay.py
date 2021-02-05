@@ -4,12 +4,10 @@ import sys
 import logging
 import subprocess
 import stat
-from typing import Any
 import urllib.request
 from pathlib import Path
 import ssl
 import platform
-import tempfile
 import tarfile
 import time
 import json
