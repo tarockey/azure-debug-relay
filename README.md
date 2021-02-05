@@ -97,7 +97,7 @@ If your code has a different structure remotely, you may need to provide more so
 ]
 ```
 
-It tells VS Code that the workspace directory locally is mapped to the "current" directory remotely. 
+It tells VS Code that the workspace directory locally is mapped to the "current" directory remotely.
 
 When the debugger looks goes through a file remotely, it needs to find the corresponding file in your local VS Code workspace.
 When debugging `remote_server_demo.py`, the debugger maps `./remote_server_demo.py` remotely to `${workspaceFolder}/remote_server_demo.py` locally.
