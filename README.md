@@ -5,7 +5,7 @@ AzDebugRelay - a Python module for cross-network remote debugging in [Visual Stu
 AzDebugRelay uses [debugpy](https://github.com/microsoft/debugpy) and [Azure Relay](https://docs.microsoft.com/en-us/azure/azure-relay/relay-what-is-it) service to create a debugging tunnel between 2 machines:
 
 1. You local Visual Studio Code debugger in `listen` mode.
-2. You remote code in `attach` mode.
+1. You remote code in `attach` mode.
 
 The debugging tunnel is handled by [Azure Relay Bridge](https://github.com/vladkol/azure-relay-bridge) utility which is downloaded and installed autimatically by AzDebugRelay.
 
@@ -33,12 +33,13 @@ Before you start debugging with AzDebugRelay, there are 3 places you configure i
 1. Remote machine where you run the same code files that open locally in VS Code.
 
 ### In Azure Portal
+
 1. [Create Azure Relay resource](https://ms.portal.azure.com/#create/Microsoft.Relay).
-2. Once created, switch to the resource, and select `Hybrid Connections` option in the vertical panel.
-3. Add a hybrid connection (`+ Hybrid Connection` button), give it a memorable name (e.g. `test`) - this is your **Relay Name**.
-4. Switch to that new hybrid connection, then select `Shared Access Policies` in the vertical panel.
-5. Add a new policy with `Send` and `Listen` permissions.
-6. Once created, copy its `Primary Connection String`, this is your **Connection String**.
+1. Once created, switch to the resource, and select `Hybrid Connections` option in the vertical panel.
+1. Add a hybrid connection (`+ Hybrid Connection` button), give it a memorable name (e.g. `test`) - this is your **Relay Name**.
+1. Switch to that new hybrid connection, then select `Shared Access Policies` in the vertical panel.
+1. Add a new policy with `Send` and `Listen` permissions.
+1. Once created, copy its `Primary Connection String`, this is your **Connection String**.
 
 Every debug session requires a separate hybrid connection. Once a session is over, that hybrid connection can be used for another one.
 
@@ -59,7 +60,7 @@ For example:
 }
 ```
 
-`azrelay.json` is added in `.gitignore`, and won't be committed. 
+`azrelay.json` is added in `.gitignore`, and won't be committed.
 
 > Alternatively, you can assign these 2 variables as environment variables.
 
@@ -75,7 +76,7 @@ This step must be done before launching the remote demo.
 ### Remote Demo
 
 1. Clone the repo.
-2. Start `python3 remote_server_demo.py --debug=attach`.
+1. Start `python3 remote_server_demo.py --debug=attach`.
 
 If everything works as it's supposed to, you will hit a breakpoint in your local Visual Studio Code.
 
@@ -83,7 +84,7 @@ If everything works as it's supposed to, you will hit a breakpoint in your local
 
 `remote_server_demo.py` shows how you can use AzDebugRelay with your code.
 
-azdebugrelay package contains DebugRelay class that install and launches Azure Relay Bridge: 
+azdebugrelay package contains DebugRelay class that install and launches Azure Relay Bridge:
 
 ```python
 from azdebugrelay import DebugRelay, DebugMode
@@ -101,7 +102,7 @@ debugpy.connect(("127.0.0.1", 5678))
 debug_relay.close()
 ```
 
-* `access_key_or_connection_string` - Access Key or Connection String for Azure Relay Hybrid Connection. Must have `Send` and `Listen` permisisons
+* `access_key_or_connection_string` - Access Key or Connection String for Azure Relay Hybrid Connection. Must have `Send` and `Listen` permissions
 * `relay_name` - name of the Hybrid Connection
 * `debug_mode` - debug connection mode. `DebugMode.WaitForConnection` when starting in listening mode, `DebugMode.Connect` for attaching to a remote debugger.
 * `hybrid_connection_url` - Hybrid Connection URL. Required when access_key_or_connection_string as an access key, otherwise is ignored and may be None.
