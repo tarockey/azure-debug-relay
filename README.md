@@ -50,7 +50,40 @@ Before you start debugging with AzDebugRelay, there are 3 places you configure i
 1. Add a new policy with `Send` and `Listen` permissions.
 1. Once created, copy its `Primary Connection String`, this is your **Connection String**.
 
-Every debug session requires a separate hybrid connection. Once a session is over, that hybrid connection can be used for another one.
+#### **Azure CLI version**
+
+Choose your name instead of `mydebugrelay1` for an Azure Relay resource, and your custom name for Hybrid Connection instead of `debugrelayhc1`.
+
+```cmd
+az group create --name debugRelayResourceGroup --location westus2
+
+az relay namespace create --resource-group debugRelayResourceGroup --name mydebugrelay1 --location westus2
+
+az relay hyco create --resource-group debugRelayResourceGroup --namespace-name mydebugrelay1 --name debugrelayhc1
+
+az relay hyco authorization-rule create --resource-group debugRelayResourceGroup --namespace-name mydebugrelay1 --hybrid-connection-name debugrelayhc1 --name sendlisten --rights Send Listen
+
+az relay hyco authorization-rule keys list --resource-group debugRelayResourceGroup --namespace-name mydebugrelay1 --hybrid-connection-name debugrelayhc1 --name sendlisten
+```
+
+Last command will show you something like this:
+
+```json
+{
+  "keyName": "sendlisten",
+  "primaryConnectionString": "Endpoint=sb://mydebugrelay1.servicebus.windows.net/;SharedAccessKeyName=sendlisten;SharedAccessKey=REDACTED1;EntityPath=debugrelayhc1",
+  "primaryKey": "REDACTED1",
+  "secondaryConnectionString": "Endpoint=sb://mydebugrelay1.servicebus.windows.net/;SharedAccessKeyName=sendlisten;SharedAccessKey=REDACTED2;EntityPath=debugrelayhc1",
+  "secondaryKey": "REDACTED2"
+}
+```
+
+Use `primaryConnectionString` or `secondaryConnectionString` value as your **Connection String**.
+
+**Relay Name** would be the one you choose instead of `debugrelayhc1`.
+</details>
+
+>> You cannot share the same hybrid connection between multiple active debug sessions unless running between same 2 machines via different ports.
 
 ### Locally and Remotely
 
