@@ -1,6 +1,6 @@
 # Azure Debug Relay for Python
 
-AzDebugRelay - a Python module for cross-network remote debugging in [Visual Studio Code](https://code.visualstudio.com/). 
+AzDebugRelay - a Python module for cross-network remote debugging in [Visual Studio Code](https://code.visualstudio.com/).
 
 AzDebugRelay uses [debugpy](https://github.com/microsoft/debugpy) and [Azure Relay](https://docs.microsoft.com/en-us/azure/azure-relay/relay-what-is-it) service to create a debugging tunnel between 2 machines:
 
@@ -14,7 +14,10 @@ The debugging tunnel is handled by [Azure Relay Bridge](https://github.com/vladk
 * Python 3.6+
 * debugpy
 
-### Supported Operating Systems 
+Azure Relay Bridge tool is a .NET Core application, so you may need  to istall `apt-transport-https` and other .NET Core 3.1 Runtime prerequisites on [Linux](https://docs.microsoft.com/en-us/dotnet/core/install/linux) and [Windows](https://docs.microsoft.com/en-us/dotnet/core/install/windows?tabs=netcore31).
+
+> You don't have to install .NET Runtime itself - Azure Relay Bridge build are self-contained.
+### Supported Operating Systems
 
 * Ubuntu 18+
 * Debian 10+

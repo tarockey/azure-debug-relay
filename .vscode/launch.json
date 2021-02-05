@@ -1,0 +1,32 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Python: Listen",
+            "type": "python",
+            "request": "attach",
+            "listen": {
+                "host": "127.0.0.1",
+                "port": 5678
+            },
+            "preLaunchTask": "azrelaybridge-listen",
+            "postDebugTask": "azrelaybridge-stop",
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}",
+                    "remoteRoot": "."
+                }
+            ]
+        }
+    ]
+}
