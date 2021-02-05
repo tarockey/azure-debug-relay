@@ -171,4 +171,4 @@ debug_relay.close()
 
 **Reason**: Stop all debugging sessions (if any). Kill all `azbridge` processes. Try again.
 
-Doesn't help? [File an issue](issues/new)! Thank you!
+Doesn't help? [File an issue](../../issues/new)! Thank you!
