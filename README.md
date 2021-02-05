@@ -85,10 +85,29 @@ If you are doing this on tops of your own code:
 1. Configure `.vscode/tasks.json` with `azrelaybridge-listen` and `azrelaybridge-stop` tasks as in this repo's `.vscode/tasks.json`.
 1. Configure `.vscode/launch.json` with `Python: Listen` configuration as in this repo's `.vscode/launch.json`.
 
+Notice how the debugger maps paths on the local and the remote machines.
+If your code has a different structure remotely, you may need to provide more sophisticated path mappings. Here is that piece in `.vscode/launch.json`:
+
+```json
+"pathMappings": [
+    {
+        "localRoot": "${workspaceFolder}",
+        "remoteRoot": "."
+    }
+]
+```
+
+It tells VS Code that the workspace directory locally is mapped to the "current" directory remotely. 
+
+When the debugger looks goes through a file remotely, it needs to find the corresponding file in your local VS Code workspace.
+When debugging `remote_server_demo.py`, the debugger maps `./remote_server_demo.py` remotely to `${workspaceFolder}/remote_server_demo.py` locally.
+
 ### Remote Machine
 
 1. Clone the repo.
 1. Start `python3 remote_server_demo.py --debug=attach`.
+
+> Terminal session you start #2 in must have the repo's directory as current directory - for a reason of mapping local and remote directories.
 
 If everything works as it's supposed to, you will hit a breakpoint in your local Visual Studio Code.
 
@@ -125,3 +144,31 @@ debug_relay.close()
 * `debug_mode` - debug connection mode. `DebugMode.WaitForConnection` when starting in listening mode, `DebugMode.Connect` for attaching to a remote debugger.
 * `hybrid_connection_url` - Hybrid Connection URL. Required when access_key_or_connection_string as an access key, otherwise is ignored and may be None.
 * `port` - debugging port, `5678` by default
+
+## Troubleshooting
+
+### Known issues
+
+> **On macOS, there may be a situation when Azure Relay Bridge (`azbridge`) cannot connect when creating a local forwarder** (`-L` option).
+
+**Reason**: .NET Core wants you to add your Computer Name to `/etc/hosts` file.
+
+**Workaround**: Make necessary edits of `/etc/hosts` file:
+
+1. Look for your computer's name in `Settings → Sharing`.
+2. Open `/etc/hosts` in a text editor in *sudo* mode (VS Code can save it later in *sudo* mode).
+3. Add the following line (**replace `your-computer-name` with your computer's name**). Save the file.
+
+```text
+127.0.0.1   your-computer-name
+```
+
+> **I launched the debugger as described and nothing happened**
+
+**Reason**: you *probably* didn't put a breakpoint in your VS Code locally. Make sure that breakpoint is in a place that your server process actually runs through.
+
+> **I do everything right, but thing works**
+
+**Reason**: Stop all debugging sessions (if any). Kill all `azbridge` processes. Try again.
+
+Doesn't help? [File an issue](issues/new)! Thank you!
