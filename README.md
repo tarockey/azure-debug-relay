@@ -147,6 +147,15 @@ debug_relay.close()
 
 ## Troubleshooting
 
+Why using [Azure Relay Bridge](https://github.com/Azure/azure-relay-bridge) which is a .NET Core application that we have to install and use via `subprocess` calls?
+
+Reasons:
+
+1. Azure Relay has SDKs for .NET, Java, and Node. [No Python SDK or examples](https://github.com/Azure/azure-relay/issues/28#issuecomment-390778193).
+1. Azure Relay Bridge does a lot of things we have to implement otherwise. It is a great tool that can help you connecting different networks for many purposes: for RDP, SSH and other protocols over TCP or UDP.
+
+A [private fork](https://github.com/vladkol/azure-relay-bridge) we are currently using is only to provide .NET Core 3.1 builds of the most recent code. There is a pending pul-requests: [one](https://github.com/Azure/azure-relay-bridge/pull/22) and [two](https://github.com/Azure/azure-relay-bridge/pull/19).
+
 ### Known issues
 
 > **On macOS, there may be a situation when Azure Relay Bridge (`azbridge`) cannot connect when creating a local forwarder** (`-L` option).
