@@ -24,7 +24,7 @@ AzDebugRelay is a collection of helpers for VS Code and Python that makes easier
 
 Azure Relay Bridge tool is a .NET Core application, so you may need  to install `apt-transport-https` and other .NET Core 3.1 Runtime prerequisites on [Linux](https://docs.microsoft.com/en-us/dotnet/core/install/linux) and [Windows](https://docs.microsoft.com/en-us/dotnet/core/install/windows?tabs=netcore31).
 
-> You don't have to install .NET Runtime itself - Azure Relay Bridge build are self-contained.
+> You don't have to install .NET Runtime itself - Azure Relay Bridge builds are self-contained.
 
 ### Supported Operating Systems
 
@@ -115,7 +115,8 @@ This step must be done before launching the remote code.
 
 If you are doing this on tops of your own code:
 
-1. Configure `.vscode/tasks.json` with `azrelaybridge-listen` and `azrelaybridge-stop` tasks as in this repo's `.vscode/tasks.json`.
+1. Configure `.vscode/tasks.json` with tasks as in this repo's `.vscode/tasks.json`.
+These tasks take care of launching and stopping Azure Relay Bridge when needed.
 1. Configure `.vscode/launch.json` with `Python: Listen` configuration as in this repo's `.vscode/launch.json`.
 
 Notice how the debugger maps paths on the local and the remote machines.
@@ -190,6 +191,15 @@ Reasons:
 A [private fork](https://github.com/vladkol/azure-relay-bridge) we are currently using is only to provide .NET Core 3.1 builds of the most recent code. There is a pending pul-requests: [one](https://github.com/Azure/azure-relay-bridge/pull/22) and [two](https://github.com/Azure/azure-relay-bridge/pull/19).
 
 ### Known issues
+
+> **When VS Code starts debugging in `listen` mode, Azure Relay Bridge doesn't close
+if the debugging session was stopped without another side connected and attached**
+(`azbridge` keeps running and connected).
+
+**Reason**: VS Code doesn't launch necessary `postDebugTask` if no debugging was actually started/attached.
+Just starting in `listen` mode doesn't count.
+
+**Workaround**: Currently only one - killing `azbridge` process manually. Better solution is in progress.
 
 > **On macOS, there may be a situation when Azure Relay Bridge (`azbridge`) cannot connect when creating a local forwarder** (`-L` option).
 

@@ -1,5 +1,6 @@
 from enum import Enum
 import os
+import argparse
 import sys
 import logging
 import subprocess
@@ -15,14 +16,29 @@ import zipfile
 
 
 class DebugMode(Enum):
+    """Debugging mode enum:
+    waiting for another machine to connect, or connect to another machine
+    """
+    # Start a remote forwarder with Azure Relay Bridge, another side is attaching
     WaitForConnection=1,
-    Connect=2
+    # Start a local forwarder with Azure Relay Bridge, another side is listening
+    Connect = 2
 
 
 class DebugRelay(object):
+    """Initializes and controls Azure Relay Bridge process.
+
+    Raises:
+        ValueError: Invalid arguments.
+        TimeoutError: Azure Relay Bridge took too long to connect.
+    """
+    # Azure Relay Bridge executable name
     relay_app_name = "azbridge"
+    # `~/.azdebugrelay` installation directory
     relay_dir_name = ".azdebugrelay"
+    # current Azure Debug Relay build
     relay_version_name = "0.2.9"
+    # are we running on Windows?
     is_windows = platform.platform().lower().startswith("windows")
 
     DEFAULT_AZ_RELAY_BRIDGE_UBUNTU_DOWLOAD =\
@@ -44,6 +60,22 @@ class DebugRelay(object):
                  hybrid_connection_url: str = None, 
                  port: int = 5678,
                  az_relay_connection_wait_time: float = 60):
+        """Initializes DebugRelay object. 
+
+        Args:
+            access_key_or_connection_string (str): access key or connection string for Azure Relay Hybrid Connection
+            relay_name (str): name of Azure Relay Hybrid Connection
+            debug_mode (DebugMode, optional): Connect or Listen (WaitForConnection). Defaults to DebugMode.WaitForConnection.
+            hybrid_connection_url (str, optional): optional URL of Hybrid Connection. Defaults to None. 
+                Required when access_key_or_connection_string is an access key.
+            port (int, optional): Any available port that you can use within your machine.
+                This port will be connected to or exposed by Azure Relay Bridge. Defaults to 5678.
+            az_relay_connection_wait_time (float, optional): Maximum time to wait for Azure Relay Bridge
+                to initialize and connect when open() is called with wait_for_connection == True. Defaults to 60.
+
+        Raises:
+            ValueError: hybrid_connection_url is None while access_key_or_connection_string is not a connection string.
+        """
         self.relay_subprocess = None
         if access_key_or_connection_string.startswith("Endpoint="):
             have_connection_string = True
@@ -69,50 +101,137 @@ class DebugRelay(object):
 
 
     def __del__(self):
+        """destructor
+        """
         self.close()
 
 
-    def open(self):
+    def az_relay_bridge_subprocess(self) -> subprocess.Popen:
+        """Returns Azure Relay Bridge process subprocess.Popen object.
+        None if one was not launched
+
+        Returns:
+            subprocess.Popen: Azure Relay Bridge process
+        """
+        return self.relay_subprocess
+
+
+    def open(self, wait_for_connection: bool = True):
+        """Launches Azure Relay Bridge tool with configured parameters
+        (as initialized when creating DebugRelay object).
+        If Azure Relay Bridge is not installed, installs it.
+
+        Args:
+            wait_for_connection (bool, optional): Wait for Azure Relay Bridge to initialize and connect. Defaults to True.
+
+        Raises:
+            TimeoutError: Raised when it takes longer than az_relay_connection_wait_time secods
+                        for Azure Relay Bridge to initialize and connect.
+        """
+        # close existing Azure Relay Bridge process (if running)
         self.close()
+        # install Azure Relay Bridge (if not yet)
         DebugRelay._install_azure_relay_bridge()
-        command = f"{DebugRelay.relay_app_name} {self.connection_option} {self.auth_option}"
 
+        command = f"{DebugRelay.relay_app_name} {self.connection_option} {self.auth_option}"
+        # start Azure Relay Bridge
         self.relay_subprocess = subprocess.Popen(
-            command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-            shell=True, universal_newlines=True)
-        
+            command, 
+            stdin=None, stderr=subprocess.STDOUT, stdout=subprocess.PIPE,
+            shell=True, universal_newlines=True, close_fds=True)
+        # wait a second
         time.sleep(1)
 
         start = time.perf_counter()
 
         remote_forward_ready = False
         local_forward_ready = False
-        text_output = ""
-        for line in iter(self.relay_subprocess.stdout.readline, ''):
-            text_output += f"{line}\n"
-            if line.find("LocalForwardHostStart") != -1:
-                local_forward_ready = True
-            elif line.find("RemoteForwardHostStart") != -1:
-                remote_forward_ready = True
-            if remote_forward_ready and local_forward_ready:
-                break
-            time_delta = time.perf_counter() - start
-            if time_delta > self.az_relay_connection_wait_time: 
-                raise TimeoutError()
-        logging.info("Debugging relay is ready!")
-        print(text_output)
+        over_timeout = False
+        connected = False
+
+        # If recognizing Azure Relay Bridge connection status, parse its output.
+        if wait_for_connection:
+            # Iterate over Azure Relay Bridge output lines, 
+            # looking for lines with "LocalForwardHostStart," and "RemoteForwardHostStart," to appear.
+            for line in iter(self.relay_subprocess.stdout.readline, ''):
+                logging.info(line)
+                if logging.root.getEffectiveLevel() != logging.INFO:
+                    print(line)
+                if self.relay_subprocess.poll() is not None:
+                    break
+                if wait_for_connection and not connected:
+                    if line.find("LocalForwardHostStart,") != -1:
+                        local_forward_ready = True
+                    elif line.find("RemoteForwardHostStart,") != -1:
+                        remote_forward_ready = True
+                    if remote_forward_ready and local_forward_ready:
+                        connected = True
+                        break
+                    time_delta = time.perf_counter() - start
+                    # did take too long to initialize and connect?
+                    if time_delta > self.az_relay_connection_wait_time:
+                        over_timeout = True
+                        break
+
+        # Handle over-timeout status
+        if over_timeout:
+            msg = f"Azure Relay Bridge took too long to connect."
+            logging.critical(msg)
+            self.close()
+            raise TimeoutError(msg)
+
+        msg = "Azure Relay Bridge is ready!"
+        logging.info(msg)
+        if logging.root.getEffectiveLevel() != logging.INFO:
+            print(msg)
 
 
     def close(self):
-        print("Closing Debug Relay...")
-        if self.is_running():
-            self.relay_subprocess.terminate()
-            try:
-                self.relay_subprocess.wait(timeout=3)
-            except subprocess.TimeoutExpired:
-                self.relay_subprocess.kill()
+        """Stops Azure Relay Bridge process launched by this object
+        """
+        if self.relay_subprocess is not None:
+            if self.is_running():
+                print("Closing Debug Relay...")
+                self.relay_subprocess.terminate()
+                try:
+                    self.relay_subprocess.wait(timeout=3)
+                except subprocess.TimeoutExpired:
+                    self.relay_subprocess.kill()
+            self.relay_subprocess = None
+
+
+    def background_launch(self) -> subprocess.Popen:
+        """Launches Azure Relay Bridge process in detached mode
+        Doesn't assign self.relay_subprocess, az_relay_bridge_subprocess() will return None.
+        """
+        # close existing Azure Relay Bridge process (if running)
+        self.close()
+        # install Azure Relay Bridge (if not yet)
+        DebugRelay._install_azure_relay_bridge()
+
+        command = f"{DebugRelay.relay_app_name} {self.connection_option} {self.auth_option}"
+        # start Azure Relay Bridge
+        detached_relay_subprocess = subprocess.Popen(
+            command,
+            stdin=None, stderr=None, stdout=None,
+            shell=True, close_fds=True)
+        # wait a second
+        time.sleep(1)
+        if detached_relay_subprocess.poll() is not None:
+            msg = f"Azure Relay Bridge failed to launch."
+            logging.critical(msg)
+            self.close()
         else:
-            self._kill_relays()
+            msg = "Azure Relay Bridge is running!"
+            logging.info(msg)
+            if logging.root.getEffectiveLevel() != logging.INFO:
+                print(msg)
+
+        return detached_relay_subprocess
+
+
+    def wait(self):
+        self.relay_subprocess.wait()
         self.relay_subprocess = None
 
 
@@ -156,6 +275,8 @@ class DebugRelay(object):
 
     @staticmethod
     def _kill_relays():
+        """Kills all Azure Relay Bridge processes - no matter who and how launched them
+        """
         if DebugRelay.is_windows:
             subprocess.run(
                 f"taskkill /IM \"{DebugRelay.relay_app_name}.exe\" /F", shell=True)
@@ -164,32 +285,42 @@ class DebugRelay(object):
 
 
     @staticmethod
-    def _install_azure_relay_bridge() -> str:
+    def _install_azure_relay_bridge():
+        """Installs or updates Azure Relay Bridge
+        """
         if DebugRelay._installed_az_relay:
             return
-
-        if DebugRelay.is_windows:
-            download = DebugRelay.DEFAULT_AZ_RELAY_BRIDGE_WINDOWS_DOWLOAD
-        else:
-            plat = platform.platform().lower()
-            if plat.startswith("macos"):
-                download = DebugRelay.DEFAULT_AZ_RELAY_BRIDGE_MACOS_DOWLOAD
-            elif plat.startswith("ubuntu"):
-                download = DebugRelay.DEFAULT_AZ_RELAY_BRIDGE_UBUNTU_DOWLOAD
-            else: # assume Debian
-                download = DebugRelay.DEFAULT_AZ_RELAY_BRIDGE_DEBIAN_DOWLOAD
-                if not plat.startswith("debian"):
-                    logging.warning(f"You are running an unsupported OS: {plat}. "\
-                        "Using Debian build of Azure Relay Bridge.")
-        
-        ctx = ssl.create_default_context()
-        ctx.check_hostname = False
-        ctx.verify_mode = ssl.CERT_NONE
+        DebugRelay._installed_az_relay = True
 
         azrelay_folder = os.path.join(
             Path.home(), DebugRelay.relay_dir_name, DebugRelay.relay_version_name)
-        
-        if not os.path.exists(azrelay_folder):
+        azrelay_parent = os.path.join(
+            Path.home(), DebugRelay.relay_dir_name)
+        azrelay_symlink = os.path.join(
+            azrelay_parent, DebugRelay.relay_app_name)
+        relay_file = os.path.join(
+            azrelay_folder, DebugRelay.relay_app_name)
+
+        exists = os.path.exists(azrelay_folder)
+        if not exists:
+            if DebugRelay.is_windows:
+                download = DebugRelay.DEFAULT_AZ_RELAY_BRIDGE_WINDOWS_DOWLOAD
+            else:
+                plat = platform.platform().lower()
+                if plat.startswith("macos"):
+                    download = DebugRelay.DEFAULT_AZ_RELAY_BRIDGE_MACOS_DOWLOAD
+                elif plat.startswith("ubuntu"):
+                    download = DebugRelay.DEFAULT_AZ_RELAY_BRIDGE_UBUNTU_DOWLOAD
+                else: # assume Debian
+                    download = DebugRelay.DEFAULT_AZ_RELAY_BRIDGE_DEBIAN_DOWLOAD
+                    if not plat.startswith("debian"):
+                        logging.warning(f"You are running an unsupported OS: {plat}. "\
+                            "Using Debian build of Azure Relay Bridge.")
+            
+            ctx = ssl.create_default_context()
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
+
             filestream = urllib.request.urlopen(download, context=ctx)
             
             if download.lower().endswith(".zip"):
@@ -200,42 +331,75 @@ class DebugRelay(object):
                     thetarfile.extractall(azrelay_folder)
 
             if not DebugRelay.is_windows:
-                relay_file = os.path.join(
-                    azrelay_folder, DebugRelay.relay_app_name)
                 st = os.stat(relay_file)
                 os.chmod(relay_file, st.st_mode | stat.S_IEXEC)
 
-        os.environ["PATH"] += os.pathsep + azrelay_folder
-        return azrelay_folder
+        if not exists or not os.path.exists(azrelay_symlink):
+            tmp_link = f"{azrelay_symlink}.tmp"
+            os.symlink(relay_file, tmp_link)
+            os.replace(tmp_link, azrelay_symlink)
+            st = os.stat(azrelay_symlink)
+            os.chmod(azrelay_symlink, st.st_mode | stat.S_IEXEC)
+
+        existing_path_var = os.environ["PATH"]
+        paths = existing_path_var.split(os.pathsep)
+        if azrelay_parent not in paths:
+            os.environ["PATH"] += os.pathsep + azrelay_parent
 
 
-def _main(listen:bool):
+def _main(connect:bool):
+    """CLI main function
+
+    Args:
+        connect (bool): Connect (if True) or listen for incoming connections
+    """
     print("Debug Relay Initialization...")
-    relay_dir = DebugRelay._install_azure_relay_bridge()
 
     config_file = "azrelay.json"
-    mode = DebugMode.WaitForConnection if listen else DebugMode.Connect
+    mode = DebugMode.Connect if connect else DebugMode.WaitForConnection
     if os.path.exists(config_file):
         debug_relay = DebugRelay.from_config(config_file, debug_mode=mode)
     else:
         debug_relay = DebugRelay.from_environment(mode, debug_mode=mode)
 
-    command = f"{os.path.join(relay_dir, DebugRelay.relay_app_name)} "\
-              f"{debug_relay.connection_option} {debug_relay.auth_option}"
-    print(f"Starting Debug relay...")
-    process = subprocess.Popen(command,
-        shell=True,
-        stdin=None, stdout=None, stderr=None, close_fds=True)
-    print("Relay is running.")
-    process.wait()
-    print("Relay has been closed.")
+    if debug_relay is not None:
+        print(f"Starting Debug relay...")
+        relay = debug_relay.background_launch()
+        relay.wait()
 
 
+def _cli_main(argv):
+    """CLI entry function
+
+    Args:
+        argv: Command Line arguments
+
+        --no-kill - optional,
+            if presented, prevents existing Azure Relay Bridge processes from being nuked.
+            Ff omitted, all existing Azure Azure Relay Bridge processes will be killed.
+        --mode - required,
+            listen, connect or none (default).
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--no-kill', action='store_true',
+                        default=False, required=False)
+    parser.add_argument('--mode', action='store',
+                        default="none", choices=['connect', 'listen', "none"], required=False)
+    options = parser.parse_args(args=argv)
+
+    logging.root.setLevel(logging.INFO)
+    if not options.no_kill:
+        print("Closing existing Azure Debug Relay processes.")
+        DebugRelay._kill_relays()
+
+    if options.mode != "none":
+        connect = True if options.mode == "connect" else False
+        _main(connect)
+
+
+# DebugRelays can work as a CLI tool.
 if __name__ == '__main__':
-    DebugRelay._kill_relays()
-    if len(sys.argv) > 1:
-        listen = True if sys.argv[1].lower() == "--listen" else False
-        _main(listen)
-    else:
-        print("Debug Relay Stopped.")
+    _cli_main(sys.argv[1:])
+    
+    
     

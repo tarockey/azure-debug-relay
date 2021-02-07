@@ -2,8 +2,8 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "azrelaybridge-listen",
-            "command": "python3 azdebugrelay/debug_relay.py --listen",
+            "label": "azrelaybridge-listen-launch",
+            "command": "python3 azdebugrelay/debug_relay.py --mode listen",
             "type": "shell",
             "isBackground": true,
             "problemMatcher": [
@@ -23,6 +23,22 @@
                     }
                 }
             ]
+        },
+        {
+            "label": "azrelaybridge-empty-task",
+            "command": "echo Preparing Azure Debug Relay...",
+            "type": "shell",
+            "problemMatcher": []
+        },
+        {
+            "label": "azrelaybridge-listen",
+            "dependsOn":
+                [
+                    "azrelaybridge-stop",
+                    "azrelaybridge-empty-task", // need this for VS Code to recognize stopped relay
+                    "azrelaybridge-listen-launch"
+                ], 
+            "dependsOrder": "sequence"
         },
         {
             "label": "azrelaybridge-stop",
