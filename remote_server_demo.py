@@ -7,16 +7,32 @@ from azdebugrelay import DebugRelay, DebugMode
 
 
 def do_work():
+    """Just a demo function. We debug it.
+    """
     print("Hello world!")
     plat = platform.platform()
-    print(plat)
+    debugpy.breakpoint() # you can put a real VSCode breakpoint
+    print(plat) # the debugger will stop here because debugpy.breakpoint() call above
 
 
 def _check_for_debugging(args) -> DebugRelay:
+    """An over-engineered debugger initialization function.
+    Parses command-line arguments looking for `--debug` option.
+    If found option's value defines debugging behaviour:
+     * `attach` - connects to a remote debugger (your VS Code in `listen` mode)
+     * `listen` - starts listening for a remote debugger to connect
+     * `none` (default) - do not start a DebugRelay
+
+    Args:
+        args: Command line arguments
+
+    Returns:
+        DebugRelay: running DebugRelay object
+    """
     debug_relay = None
     parser = argparse.ArgumentParser()
     parser.add_argument('--debug', action='store',
-                        default="no", choices=['attach', 'listen', 'none'], required=False)
+                        default="none", choices=['attach', 'listen', 'none'], required=False)
     options = parser.parse_args(args=args)
     if options.debug != "none":
         print(f"Starting DebugRelay in `{options.debug}` mode.")
@@ -48,6 +64,11 @@ def _check_for_debugging(args) -> DebugRelay:
 
 
 def _main(args):
+    """CLI entry point
+
+    Args:
+        args: Command Line arguments
+    """
     debug_relay = _check_for_debugging(args)
 
     do_work()
