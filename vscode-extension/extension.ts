@@ -1,7 +1,6 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import { exception } from 'console';
-import { getuid } from 'process';
 import { stringify } from 'querystring';
 import * as vscode from 'vscode';
 var path = require('path')
