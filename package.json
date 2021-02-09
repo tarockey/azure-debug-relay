@@ -12,7 +12,9 @@
         "Debuggers"
     ],
     "activationEvents": [
-        "workspaceContains:.azrelay.json"
+        "onStartupFinished",
+        "workspaceContains:.azrelay.json",
+        "onDebug"
     ],
     "main": "./out/extension.js",
     "contributes": {
@@ -26,23 +28,22 @@
                 "title": "Stop"
             }
         ],
-        "configuration":{
+        "configuration": {
+            "type": "object",
             "title": "Azure Debug Relay",
             "properties": {
-                "azdebugrelay.connection_string": {
+                "azure-debug-relay.hybrid-connection-string": {
                     "type": [
-                        "string",
-                        "null"
+                        "string"
                     ],
-                    "default": null,
+                    "default": "",
                     "description": "Connection String of an Azure Relay Hybrid Connection"
                 },
-                "azdebugrelay.hybrid_connection_name": {
+                "azure-debug-relay.hybrid-connection-name": {
                     "type": [
-                        "string",
-                        "null"
+                        "string"
                     ],
-                    "default": null,
+                    "default": "",
                     "description": "Azure Relay Hybrid Connection Name"
                 }
             }
@@ -61,5 +62,8 @@
         "@typescript-eslint/parser": "^3.0.2",
         "eslint": "^7.1.0",
         "typescript": "^4.0.2"
+    },
+    "dependencies": {
+        "@azure/ms-rest-azure-env": "^2.0.0"
     }
 }
