@@ -87,7 +87,7 @@ Use `primaryConnectionString` or `secondaryConnectionString` value as your **Con
 
 ### Locally and Remotely
 
-Create `azrelay.json` file in your workspace directory or whatever directory will be "current" (next to `remote_server_demo.py` files),
+Create `.azrelay.json` file in your workspace directory or whatever directory will be "current" (next to `remote_server_demo.py` files),
 and set 2 variables:
 
 1. `AZRELAY_CONNECTION_STRING` to your **Connection String**.
@@ -102,7 +102,7 @@ For example:
 }
 ```
 
-`azrelay.json` is added in `.gitignore`, and won't be committed.
+`.azrelay.json` is added in `.gitignore`, and won't be committed.
 
 > Alternatively, you can assign these 2 variables as environment variables.
 
@@ -158,13 +158,14 @@ access_key_or_connection_string = "AZURE RELAY HYBRID CONNECTION STRING OR ACCES
 relay_name = "RELAY NAME" # your Hybrid Connection name
 debug_mode = DebugMode.Connect # or DebugMode.WaitForConnection if connecting from another end
 hybrid_connection_url = "HYBRID CONNECTION URL" # can be None if access_key_or_connection_string is a connection string
+host = "127.0.0.1" # local hostname or ip address the debugger starts on
 port = 5678 # any available port that you can use within your machine
 
-debug_relay = DebugRelay(access_key_or_connection_string, relay_name, debug_mode, hybrid_connection_url, port)
+debug_relay = DebugRelay(access_key_or_connection_string, relay_name, debug_mode, hybrid_connection_url, host, port)
 debug_relay.open()
 
 # attach to a remote debugger (usually from remote server code) with debug_mode = DebugMode.Connect
-debugpy.connect(("127.0.0.1", port))
+debugpy.connect((host, port))
 
 # Debug, debug, debug
 # ...
@@ -177,6 +178,7 @@ debug_relay.close()
 * `relay_name` - name of the Hybrid Connection
 * `debug_mode` - debug connection mode. `DebugMode.WaitForConnection` when starting in listening mode, `DebugMode.Connect` for attaching to a remote debugger.
 * `hybrid_connection_url` - Hybrid Connection URL. Required when access_key_or_connection_string as an access key, otherwise is ignored and may be None.
+* `host` - Local hostname or ip address the debugger starts on, `127.0.0.1` by default
 * `port` - debugging port, `5678` by default
 
 ## Troubleshooting

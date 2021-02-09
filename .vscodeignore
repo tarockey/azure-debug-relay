@@ -1,0 +1,16 @@
+.git
+.gitignore
+.vscode
+azrelay.json
+.azrelay.json
+*
+*/**
+!out/extension.js
+!azdebugrelay/*.py
+!README.md
+!LICENSE
+!package.json
+!package.nls.json
+!README.md
+!ThirdPartyNotices.txt
+!images/*
