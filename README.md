@@ -102,7 +102,7 @@ Use `primaryConnectionString` or `secondaryConnectionString` value as your **Con
 
 Remote Server example (in `samples/simple_demo/remote_server_demo.py`) assumes that Azure Relay credentials will are passes via `.azrelay.json` file in the current directory or via environment variables. Therefore, you have 2 options:
 
-**Option 1**: Create `.azrelay.json` file in your workspace directory or whatever directory will be "current",
+**Option 1**: Create `.azrelay.json` file in your workspace directory root or whatever directory will be "current",
 and set 2 variables:
 
 1. `AZRELAY_CONNECTION_STRING` to your **Connection String**.
@@ -160,12 +160,12 @@ If your code has a different structure remotely, you may need to provide more so
 It tells VS Code that the workspace directory locally is mapped to the "current" directory remotely.
 
 When the debugger looks goes through a file remotely, it needs to find the corresponding file in your local VS Code workspace.
-When debugging `remote_server_demo.py`, the debugger maps `./remote_server_demo.py` remotely to `${workspaceFolder}/remote_server_demo.py` locally.
+When debugging `remote_server_demo.py`, the debugger maps `./samples/simple_demo/remote_server_demo.py` remotely to `${workspaceFolder}/samples/simple_demo/remote_server_demo.py` locally.
 
 ### Launch the example on the remote machine
 
 1. Clone the repo.
-1. Start `python3 remote_server_demo.py --debug=attach`.
+1. Start `python3 ./samples/simple_demo/remote_server_demo.py --debug=attach`. Notice that current directory must contain `.azrelay.json` file unless configured with environment variables.
 
 > Terminal session you start #2 in must have the repo's directory as current directory - for a reason of mapping local and remote directories.
 
