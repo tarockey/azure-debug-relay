@@ -67,6 +67,7 @@ def _check_for_debugging(args) -> DebugRelay:
         
         if debug_relay is None:
             print("Cannot create Debug Relay due to missing configuration.")
+            return None
 
         debug_relay.open()
 
