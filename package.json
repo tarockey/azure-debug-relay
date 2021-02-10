@@ -2,12 +2,13 @@
     "name": "azure-debug-relay",
     "displayName": "Azure Debug Relay",
     "description": "Azure Debug Relay Debugger Extension for Python",
-    "version": "0.1.2",
+    "version": "0.1.4",
     "publisher": "VladKolesnikov-vladkol",
     "repository": "https://github.com/vladkol/azure-debug-relay",
     "engines": {
         "vscode": "^1.34.0"
     },
+    "icon": "images/azdebugrelay-icon.png",
     "categories": [
         "Debuggers"
     ],

@@ -242,4 +242,4 @@ A [private fork](https://github.com/vladkol/azure-relay-bridge) we are currently
 
 **Reason**: Stop all debugging sessions (if any). Kill all `azbridge` processes. Try again.
 
-Doesn't help? [File an issue](../../issues/new)! Thank you!
+Doesn't help? [File an issue](https://github.com/vladkol/azure-debug-relay/issues/new)! Thank you!
