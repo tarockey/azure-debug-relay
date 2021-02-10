@@ -3,6 +3,23 @@ import sys
 import argparse
 import debugpy
 import platform
+import pathlib
+
+### This block is only for debugging from samples/simple_demo directory.
+### You don't need it when have azdebugrelay module installed.
+import pkg_resources
+_AZDEBUGRELYNAME = "azdebugrelay"
+_required_azdebugrelay = {_AZDEBUGRELYNAME}
+_installed_azdebugrelay = {pkg.key for pkg in pkg_resources.working_set}
+_missing_azdebugrelay = _required_azdebugrelay - _installed_azdebugrelay
+
+if _missing_azdebugrelay:
+    _workspace_dir = pathlib.Path(__file__).parent.parent.parent.absolute()
+    _azdebugrelay_dir = os.path.dirname(
+        os.path.join(_workspace_dir, "azdebugrelay"))
+    sys.path.insert(0, _azdebugrelay_dir)
+###############  
+
 from azdebugrelay import DebugRelay, DebugMode
 
 
@@ -37,18 +54,20 @@ def _check_for_debugging(args) -> DebugRelay:
     if options.debug != "none":
         print(f"Starting DebugRelay in `{options.debug}` mode.")
 
-        config_file = "azrelay.json"
+        config_file = "./.azrelay.json"
+
         mode = DebugMode.Connect if options.debug == "attach" else DebugMode.WaitForConnection
         if os.path.exists(config_file):
             debug_relay = DebugRelay.from_config(config_file, debug_mode=mode)
         else:
-            debug_relay = DebugRelay.from_environment(mode, debug_mode=mode)
+            debug_relay = DebugRelay.from_environment(debug_mode=mode)
         
         # you can also create DebugRelay directly by providing connection string and the rest of its configuration:
         # debug_relay = DebugRelay(access_key_or_connection_string, relay_name, debug_mode, hybrid_connection_url, port)
         
         if debug_relay is None:
             print("Cannot create Debug Relay due to missing configuration.")
+            return None
 
         debug_relay.open()
 

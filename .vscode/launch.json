@@ -5,6 +5,19 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Run Extension",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/out/**/*.js"
+            ],
+            "preLaunchTask": "npm: watch"
+        },
+        {
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
@@ -19,8 +32,6 @@
                 "host": "127.0.0.1",
                 "port": 5678
             },
-            "preLaunchTask": "azrelaybridge-listen",
-            "postDebugTask": "azrelaybridge-stop",
             "pathMappings": [
                 {
                     "localRoot": "${workspaceFolder}",

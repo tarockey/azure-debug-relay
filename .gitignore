@@ -1,5 +1,9 @@
 # local AzDebugRelay configuration 
 azrelay.json
+.azrelay.json
+
+# VSCode extension builds
+out/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

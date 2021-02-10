@@ -1,8 +1,11 @@
 # Azure Debug Relay for Python
 
-AzDebugRelay - a Python module for cross-network remote debugging in [Visual Studio Code](https://code.visualstudio.com/).
+Azure Debug Relay - is a [Visual Studio Code](https://code.visualstudio.com/) extension and a Python package for cross-network remote debugging.
 
-AzDebugRelay uses [debugpy](https://github.com/microsoft/debugpy) and [Azure Relay](https://docs.microsoft.com/en-us/azure/azure-relay/relay-what-is-it) service to create a debugging tunnel between 2 machines:
+* [Azure Debug Relay extension](https://marketplace.visualstudio.com/items?itemName=VladKolesnikov-vladkol.azure-debug-relay) on Visual Studio Marketplace
+* [azure-debug-relay](https://pypi.org/project/azure-debug-relay/) package on PyPI
+
+Azure Debug Relay uses [debugpy](https://github.com/microsoft/debugpy) and [Azure Relay](https://docs.microsoft.com/en-us/azure/azure-relay/relay-what-is-it) service to create a debugging tunnel between 2 machines:
 
 1. You local Visual Studio Code debugger in `listen` mode.
 1. You remote code in `attach` mode.
@@ -10,17 +13,17 @@ AzDebugRelay uses [debugpy](https://github.com/microsoft/debugpy) and [Azure Rel
 Both machines can be isolated behind NAT or virtual networks - all they need is to be able to connect to Azure Relay resource.
 Azure Relay carries a secure tunnel, just as if these machines were in the same VPN.
 
-![Azure Relay Debugging Bridge](images/debug-relay-diagram.png)
+![Azure Relay Debugging Bridge](https://raw.githubusercontent.com/vladkol/azure-debug-relay/main/images/debug-relay-diagram.png)
 
-The debugging tunnel is handled by [Azure Relay Bridge](https://github.com/vladkol/azure-relay-bridge) utility which is downloaded and installed automatically by AzDebugRelay. Azure Relay Bridge can maintain secure TCP and UDP tunnels for different purposes.
-AzDebugRelay is a collection of helpers for VS Code and Python that makes easier to use Azure Relay Bridge for debugging remote code.
+The debugging tunnel is handled by **[Azure Relay Bridge](https://github.com/vladkol/azure-relay-bridge)** utility which is downloaded and installed automatically by Azure Debug Relay. Azure Relay Bridge can maintain secure TCP and UDP tunnels for different purposes.
 
 > We currently use a private fork of [Azure Relay Bridge](https://github.com/Azure/azure-relay-bridge) repo.
 
 ## Requirements
 
 * Python 3.6+
-* debugpy
+* debugpy 1.2.1+
+* Visual Studio Code 1.34+ (for using VS Code extension)
 
 Azure Relay Bridge tool is a .NET Core application, so you may need  to install `apt-transport-https` and other .NET Core 3.1 Runtime prerequisites on [Linux](https://docs.microsoft.com/en-us/dotnet/core/install/linux) and [Windows](https://docs.microsoft.com/en-us/dotnet/core/install/windows?tabs=netcore31).
 
@@ -33,9 +36,19 @@ Azure Relay Bridge tool is a .NET Core application, so you may need  to install 
 * macOS 10+
 * Windows 10
 
+## Installation
+
+**On the debugger side (usually your dev machine with Visual Studio code)**:
+
+> Install [Azure Debug Relay extension](https://marketplace.visualstudio.com/items?itemName=VladKolesnikov-vladkol.azure-debug-relay) from Visual Studio Marketplace.
+
+**On the server side**:
+
+> `python3 -m pip install azure-debug-relay`
+
 ## Usage
 
-Before you start debugging with AzDebugRelay, there are 3 places you configure it:
+Before you start debugging with Azure Debug Relay, there are 3 places you configure it:
 
 1. Azure Portal.
 1. Local machine where you run Visual Studio Code and its Python debugger.
@@ -85,9 +98,11 @@ Use `primaryConnectionString` or `secondaryConnectionString` value as your **Con
 
 >> You cannot share the same hybrid connection between multiple active debug sessions unless running between same 2 machines via different ports.
 
-### Locally and Remotely
+### Remotely with `remote_server_demo.py` or your code
 
-Create `azrelay.json` file in your workspace directory or whatever directory will be "current" (next to `remote_server_demo.py` files),
+Remote Server example (in `samples/simple_demo/remote_server_demo.py`) assumes that Azure Relay credentials will are passes via `.azrelay.json` file in the current directory or via environment variables. Therefore, you have 2 options:
+
+**Option 1**: Create `.azrelay.json` file in your workspace directory root or whatever directory will be "current",
 and set 2 variables:
 
 1. `AZRELAY_CONNECTION_STRING` to your **Connection String**.
@@ -97,27 +112,38 @@ For example:
 
 ```json
 {
-  "AZRELAY_CONNECTION_STRING": "Endpoint=sb://vladkol-relay.servicebus.windows.net/;SharedAccessKeyName=default;SharedAccessKey=REDACTED;EntityPath=test",
-  "AZRELAY_NAME": "test"
+  "AZRELAY_CONNECTION_STRING": "Endpoint=sb://mydebugrelay1.servicebus.windows.net/;SharedAccessKeyName=sendlisten;SharedAccessKey=REDACTED1;EntityPath=debugrelayhc1",
+  "AZRELAY_NAME": "debugrelayhc1"
 }
 ```
 
-`azrelay.json` is added in `.gitignore`, and won't be committed.
+Make sure you add `.azrelay.json` to `.gitignore` so won't be committed.
 
-> Alternatively, you can assign these 2 variables as environment variables.
+**Option 2**: You can assign these 2 variables as environment variables: `AZRELAY_CONNECTION_STRING` and `AZRELAY_NAME` instead.
 
-### Locally in Visual Studio Code
+### Prepare local Visual Studio Code
 
-This step must be done before launching the remote code.
+Use `.azrelay.json` file in the root of your workspace as above or `.vscode/settings.json` with the following settings (actual values are ones you have):
+
+```json
+{
+  "azure-debug-relay.hybrid-connection-string": "Endpoint=sb://your-relay.servicebus.windows.net/;SharedAccessKeyName=key_name;SharedAccessKey=REDACTED;EntityPath=test",
+
+  "azure-debug-relay.hybrid-connection-name": "test",  
+}
+```
+
+> Whenever Azure Debug Relay VS Code extension detects non-empty `azure-debug-relay.hybrid-connection-string` and `azure-debug-relay.hybrid-connection-name` settings (`vscode/settings.json`) or `AZRELAY_CONNECTION_STRING` and `AZRELAY_NAME` in `.azrelay.json` file, it launches Azure Relay Bridge every time a debugging session with debugpy in `listen` mode is about to begin. If extension settings are not empty and `.azrelay.json` is present, Azure Relay Bridge prefers values from the extension settings (`vscode/settings.json`).
+
+Visual Studio Code extension ignores `AZRELAY_CONNECTION_STRING` and `AZRELAY_NAME` environment variables.
+
+### Start debugging in Visual Studio Code
+
+This step must be done on your dev machine in Visual Studio Code before launching the remote code.
 
 1. Open `remote_server_demo.py` and put a breakpoint in `do_work()` function.
+1. Makes sure your `.vscode/launch.json` has `Python: Listen` configuration as in this repo's `.vscode/launch.json`.
 1. Start debugging in your local Visual Studio Code in `Python: Listen` configuration.
-
-If you are doing this on tops of your own code:
-
-1. Configure `.vscode/tasks.json` with tasks as in this repo's `.vscode/tasks.json`.
-These tasks take care of launching and stopping Azure Relay Bridge when needed.
-1. Configure `.vscode/launch.json` with `Python: Listen` configuration as in this repo's `.vscode/launch.json`.
 
 Notice how the debugger maps paths on the local and the remote machines.
 If your code has a different structure remotely, you may need to provide more sophisticated path mappings. Here is that piece in `.vscode/launch.json`:
@@ -134,22 +160,22 @@ If your code has a different structure remotely, you may need to provide more so
 It tells VS Code that the workspace directory locally is mapped to the "current" directory remotely.
 
 When the debugger looks goes through a file remotely, it needs to find the corresponding file in your local VS Code workspace.
-When debugging `remote_server_demo.py`, the debugger maps `./remote_server_demo.py` remotely to `${workspaceFolder}/remote_server_demo.py` locally.
+When debugging `remote_server_demo.py`, the debugger maps `./samples/simple_demo/remote_server_demo.py` remotely to `${workspaceFolder}/samples/simple_demo/remote_server_demo.py` locally.
 
-### Remote Machine
+### Launch the example on the remote machine
 
 1. Clone the repo.
-1. Start `python3 remote_server_demo.py --debug=attach`.
+1. Start `python3 ./samples/simple_demo/remote_server_demo.py --debug=attach`. Notice that current directory must contain `.azrelay.json` file unless configured with environment variables.
 
 > Terminal session you start #2 in must have the repo's directory as current directory - for a reason of mapping local and remote directories.
 
 If everything works as it's supposed to, you will hit a breakpoint in your local Visual Studio Code.
 
-## AzDebugRelay API
+## Azure Debug Relay Python API
 
-`remote_server_demo.py` shows how you can use AzDebugRelay with your code.
+`remote_server_demo.py` shows how you can use Azure Debug Relay (azure-debug-relay package) with your code.
 
-**azdebugrelay** package contains DebugRelay class that install and launches Azure Relay Bridge:
+**azdebugrelay** module contains DebugRelay class that install and launches Azure Relay Bridge:
 
 ```python
 from azdebugrelay import DebugRelay, DebugMode
@@ -158,13 +184,14 @@ access_key_or_connection_string = "AZURE RELAY HYBRID CONNECTION STRING OR ACCES
 relay_name = "RELAY NAME" # your Hybrid Connection name
 debug_mode = DebugMode.Connect # or DebugMode.WaitForConnection if connecting from another end
 hybrid_connection_url = "HYBRID CONNECTION URL" # can be None if access_key_or_connection_string is a connection string
+host = "127.0.0.1" # local hostname or ip address the debugger starts on
 port = 5678 # any available port that you can use within your machine
 
-debug_relay = DebugRelay(access_key_or_connection_string, relay_name, debug_mode, hybrid_connection_url, port)
+debug_relay = DebugRelay(access_key_or_connection_string, relay_name, debug_mode, hybrid_connection_url, host, port)
 debug_relay.open()
 
 # attach to a remote debugger (usually from remote server code) with debug_mode = DebugMode.Connect
-debugpy.connect(("127.0.0.1", port))
+debugpy.connect((host, port))
 
 # Debug, debug, debug
 # ...
@@ -177,6 +204,7 @@ debug_relay.close()
 * `relay_name` - name of the Hybrid Connection
 * `debug_mode` - debug connection mode. `DebugMode.WaitForConnection` when starting in listening mode, `DebugMode.Connect` for attaching to a remote debugger.
 * `hybrid_connection_url` - Hybrid Connection URL. Required when access_key_or_connection_string as an access key, otherwise is ignored and may be None.
+* `host` - Local hostname or ip address the debugger starts on, `127.0.0.1` by default
 * `port` - debugging port, `5678` by default
 
 ## Troubleshooting
@@ -191,15 +219,6 @@ Reasons:
 A [private fork](https://github.com/vladkol/azure-relay-bridge) we are currently using is only to provide .NET Core 3.1 builds of the most recent code. There is a pending pul-requests: [one](https://github.com/Azure/azure-relay-bridge/pull/22) and [two](https://github.com/Azure/azure-relay-bridge/pull/19).
 
 ### Known issues
-
-> **When VS Code starts debugging in `listen` mode, Azure Relay Bridge doesn't close
-if the debugging session was stopped without another side connected and attached**
-(`azbridge` keeps running and connected).
-
-**Reason**: VS Code doesn't launch necessary `postDebugTask` if no debugging was actually started/attached.
-Just starting in `listen` mode doesn't count.
-
-**Workaround**: Currently only one - killing `azbridge` process manually. Better solution is in progress.
 
 > **On macOS, there may be a situation when Azure Relay Bridge (`azbridge`) cannot connect when creating a local forwarder** (`-L` option).
 
@@ -223,4 +242,4 @@ Just starting in `listen` mode doesn't count.
 
 **Reason**: Stop all debugging sessions (if any). Kill all `azbridge` processes. Try again.
 
-Doesn't help? [File an issue](../../issues/new)! Thank you!
+Doesn't help? [File an issue](https://github.com/vladkol/azure-debug-relay/issues/new)! Thank you!
