@@ -1,7 +1,3 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
-import { exception } from 'console';
-import { stringify } from 'querystring';
 import * as vscode from 'vscode';
 var path = require('path')
 
@@ -40,8 +36,8 @@ function getConfigOption(): string {
 
 function startRelayIfCan(context: vscode.ExtensionContext) {
     hasCredentialsFile = false
-    vscode.workspace.findFiles(".azrelay.json").then((_: any) => {
-        hasCredentialsFile = true
+    vscode.workspace.findFiles(".azrelay.json").then((files: any) => {
+        hasCredentialsFile = (files != null && files.lenght > 0)
     }).then(() => {
         var options = getConfigOption()
         if (options && options.length > 0) {
