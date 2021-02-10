@@ -382,7 +382,7 @@ def _main(connect: bool, host: str, port: int, connection_string: str = None, re
         if os.path.exists(config_file):
             debug_relay = DebugRelay.from_config(config_file, debug_mode=mode, host=host, port=port)
         else:
-            config_file = os.path.normpath()
+            config_file = os.path.normpath(config_file)
             logging.warning(f"Cannot load configuration file {config_file}. Trying with environment variables.")
             debug_relay = None
     else:
