@@ -390,7 +390,7 @@ def _main(connect: bool, host: str, port: int, connection_string: str = None, re
     
     if debug_relay is None:
         debug_relay = DebugRelay.from_environment(
-            mode, debug_mode=mode, host=host, port=port)
+                debug_mode=mode, host=host, port=port)
     
     if debug_relay is None:
         raise Exception("Cannot create a Debug Relay object. Configuration may be missing.")

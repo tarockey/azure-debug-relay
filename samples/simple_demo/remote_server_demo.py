@@ -60,7 +60,7 @@ def _check_for_debugging(args) -> DebugRelay:
         if os.path.exists(config_file):
             debug_relay = DebugRelay.from_config(config_file, debug_mode=mode)
         else:
-            debug_relay = DebugRelay.from_environment(mode, debug_mode=mode)
+            debug_relay = DebugRelay.from_environment(debug_mode=mode)
         
         # you can also create DebugRelay directly by providing connection string and the rest of its configuration:
         # debug_relay = DebugRelay(access_key_or_connection_string, relay_name, debug_mode, hybrid_connection_url, port)
