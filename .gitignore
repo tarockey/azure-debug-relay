@@ -1,6 +1,9 @@
-# local AzDebugRelay configuration 
+# local AzDebugRelay configuration, with secrets!
 azrelay.json
 .azrelay.json
+
+# VS Code settings, secrets may be here
+.vscode/settings.json
 
 # VSCode extension builds
 out/
