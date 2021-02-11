@@ -37,7 +37,7 @@ function getConfigOption(): string {
 function startRelayIfCan(context: vscode.ExtensionContext) {
     hasCredentialsFile = false
     vscode.workspace.findFiles(".azrelay.json").then((files: any) => {
-        hasCredentialsFile = (files != null && files.lenght > 0)
+        hasCredentialsFile = (files != null && files.length > 0)
     }).then(() => {
         var options = getConfigOption()
         if (options && options.length > 0) {
