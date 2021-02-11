@@ -25,6 +25,18 @@
             "console": "integratedTerminal"
         },
         {
+            "name": "Python: Remote Server Example",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/samples/simple_demo/remote_server_demo.py",
+            "args": [
+                "--debug",
+                "attach"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        },
+        {
             "name": "Python: Listen",
             "type": "python",
             "request": "attach",

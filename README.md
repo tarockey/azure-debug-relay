@@ -222,13 +222,14 @@ A [private fork](https://github.com/vladkol/azure-relay-bridge) we are currently
 
 > **On macOS, there may be a situation when Azure Relay Bridge (`azbridge`) cannot connect when creating a local forwarder** (`-L` option).
 
-**Reason**: .NET Core wants you to add your Computer Name to `/etc/hosts` file.
+**Reason**: .NET Core wants you to add your Computer Name to `/etc/hosts` file, and make sure the hostname is configured.
 
-**Workaround**: Make necessary edits of `/etc/hosts` file:
+**Workaround**: Make necessary edits of `/etc/hosts` file, and configure hostname:
 
 1. Look for your computer's name in `Settings → Sharing`.
-2. Open `/etc/hosts` in a text editor in *sudo* mode (VS Code can save it later in *sudo* mode).
-3. Add the following line (**replace `your-computer-name` with your computer's name**). Save the file.
+1. Run the following command: `scutil --set HostName "your-computer-name"`. (**replace `your-computer-name` with your computer's name**)
+1. Open `/etc/hosts` in a text editor in *sudo* mode (VS Code can save it later in *sudo* mode).
+1. Add the following line (**replace `your-computer-name` with your computer's name**). Save the file.
 
 ```text
 127.0.0.1   your-computer-name
