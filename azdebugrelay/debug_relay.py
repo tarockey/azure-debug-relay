@@ -238,7 +238,15 @@ class DebugRelay(object):
 
 
     def is_running(self) -> bool:
-        return self.relay_subprocess is not None and self.relay_subprocess.poll() is None
+        if self.relay_subprocess is not None:
+            # subprocess.poll() doesn't always return None for a running process
+            try:
+               self.relay_subprocess.wait(0.005)
+            except subprocess.TimeoutExpired:
+                return True
+            except:
+                self.relay_subprocess = None 
+        return False
 
 
     @staticmethod
