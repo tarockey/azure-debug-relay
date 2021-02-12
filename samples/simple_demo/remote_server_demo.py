@@ -4,6 +4,7 @@ import argparse
 import debugpy
 import platform
 import pathlib
+from signal import signal, SIGINT
 
 ### This block is only for debugging from samples/simple_demo directory.
 ### You don't need it when have azdebugrelay module installed.
@@ -21,7 +22,7 @@ if _missing_azdebugrelay:
 ###############  
 
 from azdebugrelay import DebugRelay, DebugMode
-
+g_debug_relay = None
 
 def do_work():
     """Just a demo function. We debug it.
@@ -30,6 +31,14 @@ def do_work():
     plat = platform.platform()
     debugpy.breakpoint() # you can put a real VSCode breakpoint
     print(plat) # the debugger will stop here because debugpy.breakpoint() call above
+
+
+def _signal_handler(signal_received, frame):
+    global g_debug_relay
+    if g_debug_relay is not None:
+        g_debug_relay.close()
+        g_debug_relay = None
+    exit(0)
 
 
 def _check_for_debugging(args) -> DebugRelay:
@@ -89,12 +98,14 @@ def _main(args):
     Args:
         args: Command Line arguments
     """
-    debug_relay = _check_for_debugging(args)
+    global g_debug_relay
+    g_debug_relay = _check_for_debugging(args)
+    signal(SIGINT, _signal_handler)
 
     do_work()
 
-    if debug_relay is not None:
-        debug_relay.close()
+    if g_debug_relay is not None:
+        g_debug_relay.close()
 
 
 if __name__ == '__main__':
