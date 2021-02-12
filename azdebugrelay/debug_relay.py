@@ -233,8 +233,9 @@ class DebugRelay(object):
 
 
     def wait(self):
-        self.relay_subprocess.wait()
-        self.relay_subprocess = None
+        if self.relay_subprocess is not None:
+            self.relay_subprocess.wait()
+            self.relay_subprocess = None
 
 
     def is_running(self) -> bool:
@@ -288,8 +289,8 @@ class DebugRelay(object):
 
 
     @staticmethod
-    def _kill_relays():
-        """Kills all Azure Relay Bridge processes - no matter who and how launched them
+    def kill_relays():
+        """Kills all Azure Relay Bridge processes (azrelay) - no matter who and how launched them
         """
         if DebugRelay.is_windows:
             subprocess.run(
@@ -451,7 +452,7 @@ def _cli_main(argv):
     logging.root.setLevel(logging.INFO)
     if not options.no_kill:
         print("Closing existing Azure Debug Relay processes.")
-        DebugRelay._kill_relays()
+        DebugRelay.kill_relays()
 
     if options.mode != "none":
         connect = True if options.mode == "connect" else False
