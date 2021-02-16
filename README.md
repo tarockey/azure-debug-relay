@@ -1,6 +1,6 @@
 # Azure Debug Relay for Python
 
-Azure Debug Relay - is a [Visual Studio Code](https://code.visualstudio.com/) extension and a Python package for cross-network remote debugging.
+Azure Debug Relay - is a [Visual Studio Code](https://code.visualstudio.com/) extension and a Python package for distributed remote debugging.
 
 * [Azure Debug Relay extension](https://marketplace.visualstudio.com/items?itemName=VladKolesnikov-vladkol.azure-debug-relay) on Visual Studio Marketplace
 * [azure-debug-relay](https://pypi.org/project/azure-debug-relay/) package on PyPI
@@ -96,8 +96,6 @@ Use `primaryConnectionString` or `secondaryConnectionString` value as your **Con
 **Relay Name** would be the one you choose instead of `debugrelayhc1`.
 </details>
 
->> You cannot share the same hybrid connection between multiple active debug sessions unless running between same 2 machines via different ports.
-
 ### Remotely with `remote_server_demo.py` or your code
 
 Remote Server example (in `samples/simple_demo/remote_server_demo.py`) assumes that Azure Relay credentials will are passes via `.azrelay.json` file in the current directory or via environment variables. Therefore, you have 2 options:
@@ -142,8 +140,8 @@ Visual Studio Code extension ignores `AZRELAY_CONNECTION_STRING` and `AZRELAY_NA
 This step must be done on your dev machine in Visual Studio Code before launching the remote code.
 
 1. Open `remote_server_demo.py` and put a breakpoint in `do_work()` function.
-1. Makes sure your `.vscode/launch.json` has `Python: Listen` configuration as in this repo's `.vscode/launch.json`.
-1. Start debugging in your local Visual Studio Code in `Python: Listen` configuration.
+1. Makes sure your `.vscode/launch.json` has `Python: Listen 5678` configuration as in this repo's `.vscode/launch.json`.
+1. Start debugging in your local Visual Studio Code in `Python: Listen 5678` configuration.
 
 Notice how the debugger maps paths on the local and the remote machines.
 If your code has a different structure remotely, you may need to provide more sophisticated path mappings. Here is that piece in `.vscode/launch.json`:
@@ -170,6 +168,42 @@ When debugging `remote_server_demo.py`, the debugger maps `./samples/simple_demo
 > Terminal session you start #2 in must have the repo's directory as current directory - for a reason of mapping local and remote directories.
 
 If everything works as it's supposed to, you will hit a breakpoint in your local Visual Studio Code.
+
+## Debugging multiple remote code instances
+
+If you want to debug multiple instances of the same code running on different servers, each debugging session must use a different port.
+
+Notice that this workspace has 2 "listen" configurations: "Python: Listen 567**8**" and "Python: Listen 567**9**", they use 2 different ports: 5678 and 5679. It also has a **compound** configuration **"Python: Two Listeners"** where both listeners start at the same time. Use this as an example of debugging multiple remote servers.
+
+**Each server must be configured with a unique port number.**
+You may want to store a collections of available port numbers in a persistent data structure
+where you can "borrow" ports from.
+
+For example, on a Kubernetes cluster you can use [etcd locks](https://python-etcd3.readthedocs.io/en/latest/usage.html#etcd3.Lock).
+Name those resources to lock after port numbers.
+
+On Azure Machine Learning, you can leverage [Run.add_properties()](https://docs.microsoft.com/en-us/python/api/azureml-core/azureml.core.run(class)?view=azure-ml-py#add-properties-properties-) function.
+If property with a certain name (such as a port number) already exists,
+add_properties() call with the same name will fail with an exception:
+
+```python
+# assuming we are running a pipeline step we want to debug
+available_ports = [5678, 5679, 5680]
+debug_port = None
+for port in available_ports:
+  try:
+      Run.get_context().add_properties({f"debug_port_{port}":f"{port}"})
+      debug_port = port
+  except Exception as e:
+      continue
+
+if debug_port is not None:
+  print(f"Starting a debugging session on port {debug_port}")
+  # ... see "Azure Debug Relay Python API" section below
+
+```
+
+With other services you can ultimately use any distributed locking mechanism.
 
 ## Azure Debug Relay Python API
 
@@ -239,7 +273,7 @@ A [private fork](https://github.com/vladkol/azure-relay-bridge) we are currently
 
 **Reason**: you *probably* didn't put a breakpoint in your VS Code locally. Make sure that breakpoint is in a place that your server process actually runs through.
 
-> **I do everything right, but thing works**
+> **I do everything right, but nothing works**
 
 **Reason**: Stop all debugging sessions (if any). Kill all `azbridge` processes. Try again.
 

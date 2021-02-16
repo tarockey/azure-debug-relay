@@ -1,12 +1,7 @@
 import * as vscode from 'vscode';
 var path = require('path')
 
-
-const azRelayDebugHostName: string = "azRelayDebugHost"
-const azRelayDebugPortName: string = "azRelayDebugPort"
-
-var azDebugRelayTask: vscode.Task
-var currentAzDebugRelayTaskExecution: any
+var azDebugRelayTaskExecutions: { [name: string] : any; } = {};
 var hybridConnectionName = ""
 var hybridConnectionConnectionString = ""
 var hasCredentialsFile = false
@@ -34,50 +29,53 @@ function getConfigOption(): string {
     return option
 }
 
-function startRelayIfCan(context: vscode.ExtensionContext) {
+function startRelayIfCan(context: vscode.ExtensionContext, host: string, port: any) {
     hasCredentialsFile = false
     vscode.workspace.findFiles(".azrelay.json").then((files: any) => {
         hasCredentialsFile = (files != null && files.length > 0)
-    }).then(() => {
+    }).then(async () => {
         var options = getConfigOption()
         if (options && options.length > 0) {
-            startRelay(context, options)
+            await startRelay(context, options, host, String(port))
         }
     });
 }
 
-function startRelay(context: vscode.ExtensionContext, credentialOptions: string) {
-    var host = context.workspaceState.get(azRelayDebugHostName) as string;
-    var port = context.workspaceState.get(azRelayDebugPortName) as string;
-    if (host === undefined || host == null) {
-        host = "127.0.0.1"
-    }
-    if (port === undefined || port == null) {
-        port = "5678"
-    }
-    var taskType = "azdebugrelay";
+function startRelay(context: vscode.ExtensionContext, credentialOptions: string, host: string, port: string): Thenable<void> | null{
+    var taskType = `azdebugrelay_${host}_${port}`;
 
     var pythonScriptPath = path.join(context.extensionPath, "azdebugrelay", "debug_relay.py")
     var execution =
         new vscode.ShellExecution(`python3 ${pythonScriptPath} --no-kill --mode listen ` +
             `${credentialOptions} ` +
             `--port ${port} --host ${host}`);
+    var task_name = `AzureRelayBridge_${host}_${port}`
     var task = new vscode.Task({ type: taskType }, vscode.TaskScope.Workspace,
-        "azure-relay-bridge", "Azure Relay Bridge", execution)
-    task.isBackground = true
+        task_name, "Azure Relay Bridge", execution)
 
-    vscode.tasks.executeTask(task).then((exec: vscode.TaskExecution) => {
-        currentAzDebugRelayTaskExecution = exec
-    });
+    if(!azDebugRelayTaskExecutions.hasOwnProperty(task_name) 
+        || azDebugRelayTaskExecutions[task_name] == null)
+    {
+        return vscode.tasks.executeTask(task).then((exec: vscode.TaskExecution) => {
+            azDebugRelayTaskExecutions[task_name] = exec
+        });
+    }
+    else
+    {
+        return null;
+    }
 }
 
-function stopRelay (context: vscode.ExtensionContext){
-
-    var azDebugTaskExecution = currentAzDebugRelayTaskExecution as vscode.TaskExecution;
-    currentAzDebugRelayTaskExecution = null
-    if (azDebugTaskExecution != null) {
+function stopRelay(_: vscode.ExtensionContext){
+    // We always terminate all debugging tasks
+    for (var key in azDebugRelayTaskExecutions) {
+        let execution = azDebugRelayTaskExecutions[key];
+        azDebugRelayTaskExecutions[key] = null
         try {
-            azDebugTaskExecution.terminate();
+            if(execution != null)
+            {
+                execution.terminate();
+            }
         }
         catch { }
     }
@@ -92,9 +90,7 @@ export function activate(context: vscode.ExtensionContext) {
     })
     
     vscode.tasks.onDidEndTask((taskEnd: vscode.TaskEndEvent) => {
-        if (taskEnd.execution.task == azDebugRelayTask) {
-            currentAzDebugRelayTaskExecution = null
-        }
+        azDebugRelayTaskExecutions[taskEnd.execution.task.name] = null
     });
     
 
@@ -102,11 +98,9 @@ export function activate(context: vscode.ExtensionContext) {
         stopRelay(context);
     });
 
-    vscode.debug.onDidReceiveDebugSessionCustomEvent((event: vscode.DebugSessionCustomEvent) => {
+    vscode.debug.onDidReceiveDebugSessionCustomEvent(async (event: vscode.DebugSessionCustomEvent) => {
         if (event.event == "debugpyWaitingForServer") {
-            context.workspaceState.update(azRelayDebugHostName, event.body.host);
-            context.workspaceState.update(azRelayDebugPortName, String(event.body.port));
-            startRelayIfCan(context);
+            startRelayIfCan(context, event.body.host, event.body.port);
         }
     });
 

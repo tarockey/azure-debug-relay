@@ -37,7 +37,7 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "Python: Listen",
+            "name": "Python: Listen 5678",
             "type": "python",
             "request": "attach",
             "listen": {
@@ -50,6 +50,27 @@
                     "remoteRoot": "."
                 }
             ]
+        },
+        {
+            "name": "Python: Listen 5679",
+            "type": "python",
+            "request": "attach",
+            "listen": {
+                "host": "127.0.0.1",
+                "port": 5679
+            },
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}",
+                    "remoteRoot": "."
+                }
+            ]
         }
-    ]
+    ], 
+    "compounds": [
+        {
+          "name": "Python: Two Listeners",
+          "configurations": ["Python: Listen 5678", "Python: Listen 5679"]
+        }
+      ]
 }
