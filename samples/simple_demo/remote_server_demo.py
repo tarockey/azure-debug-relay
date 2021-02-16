@@ -59,7 +59,7 @@ def _check_for_debugging(args) -> DebugRelay:
     parser = argparse.ArgumentParser()
     parser.add_argument('--debug', action='store',
                         default="none", choices=['attach', 'listen', 'none'], required=False)
-    options = parser.parse_args(args=args)
+    options = parser.parse_known_args(args=args)
     if options.debug != "none":
         print(f"Starting DebugRelay in `{options.debug}` mode.")
 
