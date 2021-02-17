@@ -13,6 +13,8 @@ def _main():
                         default="", required=False)
     parser.add_argument('--debug-relay-name', action='store',
                         default="", required=False)
+    parser.add_argument('--debug-port', action='store', type=int,
+                        default=5678, required=False)
     options, _ = parser.parse_known_args()
 
     run = Run.get_context()
@@ -36,7 +38,7 @@ def _main():
         debug_mode = DebugMode.Connect
         hybrid_connection_url = None # can keep it None because using a connection string
         host = "127.0.0.1"  # local hostname or ip address the debugger starts on
-        port = 5678
+        port = options.debug_port
 
         debug_relay = DebugRelay(
             connection_string, relay_name, debug_mode, hybrid_connection_url, host, port)

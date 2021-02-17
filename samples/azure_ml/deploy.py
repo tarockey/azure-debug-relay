@@ -16,6 +16,9 @@ from azureml.pipeline.core import Pipeline, StepSequence
 hybrid_conn_connection_string = None
 # Hybrid Connection name
 hybrid_connection_name = None
+# Debugging port
+debug_port = 5678
+
 # AML compute cluster or instance name.
 cluster_name = "Debug-Std-DS3v2"
 # Experiment name
@@ -27,9 +30,9 @@ config_file_name = "./.azrelay.json"
 if hybrid_conn_connection_string is None or hybrid_connection_name is None:
     if os.path.exists(config_file_name):
         with open(config_file_name) as cfg_file:
-                config = json.load(cfg_file)
-                hybrid_connection_name = config["AZRELAY_NAME"]
-                hybrid_conn_connection_string = config["AZRELAY_CONNECTION_STRING"]
+            config = json.load(cfg_file)
+            hybrid_connection_name = config["AZRELAY_NAME"]
+            hybrid_conn_connection_string = config["AZRELAY_CONNECTION_STRING"]
     else:
         hybrid_connection_name = os.environ.get("AZRELAY_NAME")
         hybrid_conn_connection_string = os.environ.get("AZRELAY_CONNECTION_STRING")
@@ -77,18 +80,19 @@ except ComputeTargetException:
         show_output=True, min_node_count=None, timeout_in_minutes=20)
 
 # store the connection string in AML workspace Key Vault
-# (secret name is 'azdebugrelay' + MD5(hybrid_connection_string) )
+# (secret name is 'debugrelay' + MD5(hybrid_connection_string) )
 hybrid_connection_string_secret =\
-    f"azdebugrelay-{hashlib.md5(hybrid_conn_connection_string.encode('utf-8')).hexdigest()}"
+    f"debugrelay-{hashlib.md5(hybrid_conn_connection_string.encode('utf-8')).hexdigest()}"
 workspace.get_default_keyvault().set_secret(hybrid_connection_string_secret, hybrid_conn_connection_string)
 
 # Configuring a PythonScriptStep with a RunConfiguration
 # that includes debugpy and azure-debug-relay
 run_config = RunConfiguration()
-run_config.environment.python.conda_dependencies.add_conda_package("pip")
-run_config.environment.python.conda_dependencies.add_pip_package("azureml-sdk==" + amlcore.__version__)
-run_config.environment.python.conda_dependencies.add_pip_package("debugpy")
-run_config.environment.python.conda_dependencies.add_pip_package("azure-debug-relay")
+conda_dependencies = run_config.environment.python.conda_dependencies
+conda_dependencies.add_conda_package("pip")
+conda_dependencies.add_pip_package("azureml-sdk==" + amlcore.__version__)
+conda_dependencies.add_pip_package("debugpy")
+conda_dependencies.add_pip_package("azure-debug-relay")
 
 train_step = PythonScriptStep(name='Train Step with Debugging',
                               script_name="train.py",
@@ -96,7 +100,8 @@ train_step = PythonScriptStep(name='Train Step with Debugging',
                                   "--debug", "attach",
                                   # passing connection string secret's name, not the connection string itself
                                   "--debug-connection-string-secret", hybrid_connection_string_secret,
-                                  "--debug-relay-name", hybrid_connection_name
+                                  "--debug-relay-name", hybrid_connection_name,
+                                  "--debug-port", debug_port
                               ],
                               source_directory=steps_path,
                               compute_target=compute_target,
