@@ -165,9 +165,32 @@ When debugging `remote_server_demo.py`, the debugger maps `./samples/simple_demo
 1. Clone the repo.
 1. Start `python3 ./samples/simple_demo/remote_server_demo.py --debug=attach`. Notice that current directory must contain `.azrelay.json` file unless configured with environment variables.
 
-> Terminal session you start #2 in must have the repo's directory as current directory - for a reason of mapping local and remote directories.
+> Terminal session where you start #2 must have the repo's directory as current directory - for a reason of mapping local and remote directories.
 
 If everything works as it's supposed to, you will hit a breakpoint in your local Visual Studio Code.
+
+### Azure Machine Learning sample
+
+Azure ML sample is located in `samples/azure_ml` directory.
+
+It has 2 components:
+
+1. `deploy.py` script that deploys and launches an Azure ML pipeline with a single step.
+2. `steps/train.py` script which contains that simple step.
+
+For Azure ML sample, configuration `Python: Listen for Azure ML` has different mappings:
+
+```json
+"pathMappings": [
+    {
+        "localRoot": "${workspaceFolder}/samples/azure_ml/steps",
+        "remoteRoot": "."
+    }
+]
+```
+
+This is because Azure ML deploys a container with files in `steps` directory
+which will end up being current directory when running in on an Azure ML Compute target.
 
 ## Debugging multiple remote code instances
 
@@ -177,33 +200,18 @@ Notice that this workspace has 2 "listen" configurations: "Python: Listen 567**8
 
 **Each server must be configured with a unique port number.**
 You may want to store a collections of available port numbers in a persistent data structure
-where you can "borrow" ports from.
+where you can "borrow" ports from using any distributed locking mechanism.
 
-For example, on a Kubernetes cluster you can use [etcd locks](https://python-etcd3.readthedocs.io/en/latest/usage.html#etcd3.Lock).
+For example, on a Kubernetes cluster you can use
+[etcd locks](https://python-etcd3.readthedocs.io/en/latest/usage.html#etcd3.Lock).
 Name those resources to lock after port numbers.
 
 On Azure Machine Learning, you can leverage [Run.add_properties()](https://docs.microsoft.com/en-us/python/api/azureml-core/azureml.core.run(class)?view=azure-ml-py#add-properties-properties-) function.
 If property with a certain name (such as a port number) already exists,
-add_properties() call with the same name will fail with an exception:
+add_properties() call with the same name will fail with an exception.
 
-```python
-# assuming we are running a pipeline step we want to debug
-available_ports = [5678, 5679, 5680]
-debug_port = None
-for port in available_ports:
-  try:
-      Run.get_context().add_properties({f"debug_port_{port}":f"{port}"})
-      debug_port = port
-  except Exception as e:
-      continue
-
-if debug_port is not None:
-  print(f"Starting a debugging session on port {debug_port}")
-  # ... see "Azure Debug Relay Python API" section below
-
-```
-
-With other services you can ultimately use any distributed locking mechanism.
+Another approach is to makes sure the debugging session only starts on one node. For example, on Azure Batch multi-instance tasks
+`AZ_BATCH_IS_CURRENT_NODE_MASTER` environment variable equals `true` when running on the master node.
 
 ## Azure Debug Relay Python API
 

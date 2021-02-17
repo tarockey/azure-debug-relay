@@ -324,11 +324,11 @@ class DebugRelay(object):
                 plat = platform.platform().lower()
                 if plat.startswith("macos"):
                     download = DebugRelay.DEFAULT_AZ_RELAY_BRIDGE_MACOS_DOWLOAD
-                elif plat.startswith("ubuntu"):
+                elif "-ubuntu" in plat or plat.startswith("ubuntu"):
                     download = DebugRelay.DEFAULT_AZ_RELAY_BRIDGE_UBUNTU_DOWLOAD
                 else: # assume Debian
                     download = DebugRelay.DEFAULT_AZ_RELAY_BRIDGE_DEBIAN_DOWLOAD
-                    if not plat.startswith("debian"):
+                    if "debian" not in plat:
                         logging.warning(f"You are running an unsupported OS: {plat}. "\
                             "Using Debian build of Azure Relay Bridge.")
             

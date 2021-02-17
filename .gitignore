@@ -2,6 +2,9 @@
 azrelay.json
 .azrelay.json
 
+# AML config
+config.json
+
 # VS Code settings, secrets may be here
 .vscode/settings.json
 
