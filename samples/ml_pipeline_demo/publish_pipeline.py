@@ -16,6 +16,8 @@ from azureml.core import RunConfiguration
 from azureml.pipeline.core import PipelineParameter
 from azureml.data.data_reference import DataReference
 from azureml.pipeline.steps import PythonScriptStep
+from azureml.pipeline.steps import ParallelRunStep, ParallelRunConfig
+
 
 # A set of variables that you are required to provide is below.
 workspace_name = os.environ.get("WORKSPACE_NAME")
@@ -27,6 +29,8 @@ app_secret = os.environ.get("APP_SECRET")
 region = os.environ.get("REGION")
 compute_name = os.environ.get("COMPUTE_NAME")
 pipeline_name = os.environ.get("PIPELINE_NAME")
+debug_connection_string_secret = os.environ.get("DEBUG_CONNECTION_STRING_SECRET")
+debug_relay_name = os.environ.get("DEBUG_RELAY_NAME")
 
 
 def create_and_publish_pipeline() -> PublishedPipeline:
@@ -48,6 +52,12 @@ def create_and_publish_pipeline() -> PublishedPipeline:
                                   create_if_not_exist=False)
     print(aml_workspace)
 
+    # putting secrets to keyvault
+    aml_workspace.get_default_keyvault().set_secret(
+        "debug-connection-string-secret", debug_connection_string_secret)
+    aml_workspace.get_default_keyvault().set_secret(
+        "debug-relay-name", debug_relay_name)
+
     # Get Azure machine learning cluster
     aml_compute = get_compute(aml_workspace, compute_name)
     
@@ -58,6 +68,8 @@ def create_and_publish_pipeline() -> PublishedPipeline:
         pip_packages=[
             'argparse==1.4.0',
             'azureml-core==1.16.0',
+            'debugpy==1.2.1',
+            'azure-debug-relay==0.1.10'
         ])
     batch_env = Environment(name="train-env")
     batch_env.docker.enabled = True
@@ -88,7 +100,7 @@ def get_pipeline(aml_compute: ComputeTarget, blob_ds: Datastore, batch_env: Envi
     """
 
     # We need something to generate data by the way
-    pipeline_files = PipelineData("pipeline_files", datastore = blob_ds)
+    pipeline_files = PipelineData("pipeline_files", datastore = blob_ds).as_dataset()
 
     # Just an example how we can use parameters to provide different
     # input folder
@@ -110,10 +122,36 @@ def get_pipeline(aml_compute: ComputeTarget, blob_ds: Datastore, batch_env: Envi
         allow_reuse=False
     )
 
+    output_dir = PipelineData("output_dir")
+
+    parallel_run_config = ParallelRunConfig(
+        entry_script="samples/ml_pipeline_demo/steps/parallel_step.py",
+        mini_batch_size="5", 
+        output_action="summary_only",
+        environment=batch_env,
+        compute_target=aml_compute,
+        error_threshold=10,
+        run_invocation_timeout=600, # very important for debugging
+        node_count=2,
+        process_count_per_node=1)
+
+    parallelrun_step = ParallelRunStep(
+        name="predict-digits-mnist",
+        parallel_run_config=parallel_run_config,
+        inputs=[pipeline_files],
+        output=output_dir,
+        arguments=[
+            "--is_debug", is_debug
+        ],
+        allow_reuse=False
+    )
+
+    parallelrun_step.run_after(single_step)
+
     print("Pipeline Steps Created")
 
     steps = [
-        single_step
+        single_step, parallelrun_step
     ]
 
     print(f"Returning {len(steps)} steps")
