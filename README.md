@@ -169,21 +169,23 @@ When debugging `remote_server_demo.py`, the debugger maps `./samples/simple_demo
 
 If everything works as it's supposed to, you will hit a breakpoint in your local Visual Studio Code.
 
-### Azure Machine Learning sample
+### Azure Machine Learning samples
 
-Azure ML sample is located in `samples/azure_ml` directory.
+Simple Azure ML sample is located in `samples/azure_ml_simple` directory.
 
 It has 2 components:
 
-1. `deploy.py` script that deploys and launches an Azure ML pipeline with a single step.
+1. `deploy_and_run.py` script that deploys and launches an Azure ML pipeline with a single step.
 2. `steps/train.py` script which contains that simple step.
 
-For Azure ML sample, configuration `Python: Listen for Azure ML` has different mappings:
+Look at the [sample's readme file](samples/azure_ml_simple/README.md).
+
+For Azure ML sample, configuration `Python: Listen for AML` has different mappings:
 
 ```json
 "pathMappings": [
     {
-        "localRoot": "${workspaceFolder}/samples/azure_ml/steps",
+        "localRoot": "${workspaceFolder}/samples/azure_ml_simple/steps",
         "remoteRoot": "."
     }
 ]

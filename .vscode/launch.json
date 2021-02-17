@@ -37,7 +37,7 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "Python: Listen for Azure ML",
+            "name": "Python: Listen for AML",
             "type": "python",
             "request": "attach",
             "listen": {
@@ -46,7 +46,7 @@
             },
             "pathMappings": [
                 {
-                    "localRoot": "${workspaceFolder}/samples/azure_ml/steps",
+                    "localRoot": "${workspaceFolder}/samples/azure_ml_simple/steps",
                     "remoteRoot": "."
                 }
             ]
