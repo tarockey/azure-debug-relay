@@ -1,0 +1,6 @@
+.vscode/
+images/
+samples/simple_demo/
+vscode-extension/
+
+.env
