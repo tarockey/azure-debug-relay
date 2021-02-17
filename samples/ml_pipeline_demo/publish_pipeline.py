@@ -29,8 +29,8 @@ app_secret = os.environ.get("APP_SECRET")
 region = os.environ.get("REGION")
 compute_name = os.environ.get("COMPUTE_NAME")
 pipeline_name = os.environ.get("PIPELINE_NAME")
-debug_connection_string_secret = os.environ.get("DEBUG_CONNECTION_STRING_SECRET")
-debug_relay_name = os.environ.get("DEBUG_RELAY_NAME")
+debug_connection_string = os.environ.get("DEBUG_CONNECTION_STRING")
+debug_hybrid_connection_name = os.environ.get("DEBUG_HYBRID_CONNECTION_NAME")
 
 
 def create_and_publish_pipeline() -> PublishedPipeline:
@@ -54,9 +54,7 @@ def create_and_publish_pipeline() -> PublishedPipeline:
 
     # putting secrets to keyvault
     aml_workspace.get_default_keyvault().set_secret(
-        "debug-connection-string-secret", debug_connection_string_secret)
-    aml_workspace.get_default_keyvault().set_secret(
-        "debug-relay-name", debug_relay_name)
+        f"debug-connection-string-{debug_hybrid_connection_name}", debug_connection_string)
 
     # Get Azure machine learning cluster
     aml_compute = get_compute(aml_workspace, compute_name)
@@ -114,7 +112,8 @@ def get_pipeline(aml_compute: ComputeTarget, blob_ds: Datastore, batch_env: Envi
         runconfig=single_step_config,
         arguments=[
             "--pipeline_files", pipeline_files,
-            "--is_debug", is_debug
+            "--is_debug", is_debug,
+            "--debug_hybrid_connection_name", debug_hybrid_connection_name
         ],
         inputs=[],
         outputs=[pipeline_files],
@@ -141,7 +140,8 @@ def get_pipeline(aml_compute: ComputeTarget, blob_ds: Datastore, batch_env: Envi
         inputs=[pipeline_files],
         output=output_dir,
         arguments=[
-            "--is_debug", is_debug
+            "--is_debug", is_debug,
+            "--debug_hybrid_connection_name", debug_hybrid_connection_name
         ],
         allow_reuse=False
     )
