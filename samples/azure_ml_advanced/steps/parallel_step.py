@@ -1,11 +1,16 @@
 import os
 import debugpy
-from debug_utils import remote_debugger_init
+import argparse
+from debug_utils import start_remote_debugging_from_args
 
 def init():
     global is_debug
 
-    is_debug = remote_debugger_init()
+    parser = argparse.ArgumentParser(description="Parallel Step parameters")
+    parser.add_argument('--is-debug', required=False, type=bool, default=False)
+    args, _ = parser.parse_known_args()
+
+    is_debug = args.is_debug
 
 
 def run(input_rows):
@@ -15,6 +20,7 @@ def run(input_rows):
     if is_debug and bool(os.environ.get('AZ_BATCH_IS_CURRENT_NODE_MASTER')):
         # debug mode and on the master node
         print("Let's start debugging")
+        start_remote_debugging_from_args()
         debugpy.breakpoint()
 
     lines = []

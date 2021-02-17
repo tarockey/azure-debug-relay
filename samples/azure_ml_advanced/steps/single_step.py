@@ -2,21 +2,23 @@
 import argparse
 import os
 import debugpy
-from debug_utils import remote_debugger_init
+from debug_utils import start_remote_debugging_from_args
 
 def main():
 
     print("Parsing parameters")
     parser = argparse.ArgumentParser()
     parser.add_argument("--pipeline-files", type=str, required=True)
+    parser.add_argument('--is-debug', required=False, type=bool, default=False)
     args, _ = parser.parse_known_args()
 
     print(f"Output folder {args.pipeline_files}")
 
-    is_debug = remote_debugger_init()
+    is_debug = args.is_debug
 
     if is_debug:
         print("Let's start debugging")
+        start_remote_debugging_from_args()
         debugpy.breakpoint()
 
     os.makedirs("pipeline_files", exist_ok=True)

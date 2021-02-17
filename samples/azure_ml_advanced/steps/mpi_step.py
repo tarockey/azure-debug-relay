@@ -4,7 +4,7 @@ import horovod.keras as hvd
 from keras import backend as K
 import tensorflow as tf
 import debugpy
-from debug_utils import remote_debugger_init
+from debug_utils import start_remote_debugging_from_args
 
 hvd.init()
 config = tf.ConfigProto()
@@ -20,6 +20,7 @@ def main():
     print("Parsing parameters")
     parser = argparse.ArgumentParser()
     parser.add_argument("--input-ds", type=str, required=True)
+    parser.add_argument('--is-debug', required=False, type=bool, default=False)
     args, _ = parser.parse_known_args()
 
     print(f"Input folder {args.input_ds}")
@@ -27,10 +28,9 @@ def main():
     print("Horovod size:", hvd.size())
     print("Horovod rank:", hvd.rank())
 
-    is_debug = remote_debugger_init()
-
-    if is_debug and hvd.rank() == 0:
+    if args.is_debug and hvd.rank() == 0:
         print("Let's start debugging")
+        start_remote_debugging_from_args()
         debugpy.breakpoint()
 
 
