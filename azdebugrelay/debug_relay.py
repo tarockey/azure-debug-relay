@@ -55,7 +55,7 @@ class DebugRelay(object):
 
     def __init__(self,
                  access_key_or_connection_string: str,
-                 relay_name: str,
+                 relay_connection_name: str,
                  debug_mode: DebugMode = DebugMode.WaitForConnection,
                  hybrid_connection_url: str = None,
                  host: str ="127.0.0.1",
@@ -65,7 +65,7 @@ class DebugRelay(object):
 
         Args:
             access_key_or_connection_string (str): access key or connection string for Azure Relay Hybrid Connection
-            relay_name (str): name of Azure Relay Hybrid Connection
+            relay_connection_name (str): name of Azure Relay Hybrid Connection
             debug_mode (DebugMode, optional): Connect or Listen (WaitForConnection). Defaults to DebugMode.WaitForConnection.
             hybrid_connection_url (str, optional): optional URL of Hybrid Connection. Defaults to None. 
                 Required when access_key_or_connection_string is an access key.
@@ -95,9 +95,9 @@ class DebugRelay(object):
             self.auth_option = f"-E \"{hybrid_connection_url}\" -k \"{access_key_or_connection_string}\""
 
         if debug_mode == DebugMode.WaitForConnection:
-            self.connection_option = f"-R {relay_name}:{host}:{port}"
+            self.connection_option = f"-R {relay_connection_name}:{host}:{port}"
         else:
-            self.connection_option = f"-L {host}:{port}:{relay_name}"
+            self.connection_option = f"-L {host}:{port}:{relay_connection_name}"
 
         self.az_relay_connection_wait_time = az_relay_connection_wait_time
 
@@ -258,11 +258,11 @@ class DebugRelay(object):
         if os.path.exists(config_file):
             with open(config_file) as cfg_file:
                 config = json.load(cfg_file)
-                relay_name = config["AZRELAY_NAME"]
+                relay_connection_name = config["AZRELAY_CONNECTION_NAME"]
                 conn_str = config["AZRELAY_CONNECTION_STRING"]
                 return DebugRelay(
                     access_key_or_connection_string=conn_str,
-                    relay_name=relay_name,
+                    relay_connection_name=relay_connection_name,
                     debug_mode=debug_mode,
                     host=host,
                     port=port)
@@ -274,15 +274,15 @@ class DebugRelay(object):
     def from_environment(debug_mode: DebugMode = DebugMode.WaitForConnection,
                          host: str = "127.0.0.1",
                          port: int = 5678) -> any:
-        relay_name = os.environ.get("AZRELAY_NAME")
+        relay_connection_name = os.environ.get("AZRELAY_CONNECTION_NAME")
         conn_str = os.environ.get("AZRELAY_CONNECTION_STRING")
-        if not relay_name or not conn_str:
-            print("AZRELAY_CONNECTION_STRING and AZRELAY_NAME variables must be assigned.")
+        if not relay_connection_name or not conn_str:
+            print("AZRELAY_CONNECTION_STRING and AZRELAY_CONNECTION_NAME variables must be assigned.")
             return None
         else:
             return DebugRelay(
                 access_key_or_connection_string=conn_str,
-                relay_name=relay_name,
+                relay_connection_name=relay_connection_name,
                 debug_mode=debug_mode,
                 host=host,
                 port=port)
@@ -362,7 +362,7 @@ class DebugRelay(object):
             os.environ["PATH"] += os.pathsep + azrelay_parent
 
 
-def _main(connect: bool, host: str, port: int, connection_string: str = None, relay_name: str = None, config_file: str = None):
+def _main(connect: bool, host: str, port: int, connection_string: str = None, relay_connection_name: str = None, config_file: str = None):
     """CLI main function
 
     Args:
@@ -370,7 +370,7 @@ def _main(connect: bool, host: str, port: int, connection_string: str = None, re
         host (string): local hostname/address the debugging starts on (127.0.0.1)
         port (int): Azure Relay Bridge port
         connection_string (str): Optional connection string of an Azure Relay Hybrid Connection
-        relay_name (str): Optional hybrid connection name
+        relay_connection_name (str): Optional hybrid connection name
         config_file (str): Optional configuration file path. Only used if connection_string is None.
 
     Raises:
@@ -382,11 +382,11 @@ def _main(connect: bool, host: str, port: int, connection_string: str = None, re
     mode = DebugMode.Connect if connect else DebugMode.WaitForConnection
 
     if connection_string is not None:
-        if relay_name is None:
+        if relay_connection_name is None:
             msg = "Both connection string and connection name must be provided."
             print(msg)
             raise ValueError(msg)
-        debug_relay = DebugRelay(connection_string, relay_name, mode, None, host, port)
+        debug_relay = DebugRelay(connection_string, relay_connection_name, mode, None, host, port)
     elif config_file is not None:
         if os.path.exists(config_file):
             debug_relay = DebugRelay.from_config(config_file, debug_mode=mode, host=host, port=port)
@@ -426,7 +426,7 @@ def _cli_main(argv):
             Azure Relay Bridge port
         --connection-string - optional, defaults to None
             Connection string of an Azure Relay Hybrid Connection
-        --relay-name - optional, defaults to None
+        --connection-name - optional, defaults to None
             Hybrid connection name. Required if --connection-string is specified.
         --config_file - optional, defaults to None
             Configuration file path. Only used if connection_string is not specified.
@@ -443,7 +443,7 @@ def _cli_main(argv):
                         default="127.0.0.1", required=False, help="Local hostname/address the debugging starts on")
     parser.add_argument('--connection-string', action='store',
                         default=None, required=False, help="Connection string of an Azure Relay Hybrid Connection")
-    parser.add_argument('--relay-name', action='store',
+    parser.add_argument('--connection-name', action='store',
                         default=None, required=False, help="Azure Relay Hybrid Connection name")
     parser.add_argument('--config-file', action='store',
                         default=None, required=False, help="Path to the configuration file. Defaults to None.")
@@ -456,7 +456,7 @@ def _cli_main(argv):
 
     if options.mode != "none":
         connect = True if options.mode == "connect" else False
-        _main(connect, options.host, options.port, options.connection_string, options.relay_name, options.config_file)
+        _main(connect, options.host, options.port, options.connection_string, options.connection_name, options.config_file)
 
 
 # DebugRelays can work as a CLI tool.

@@ -58,7 +58,7 @@ Before you start debugging with Azure Debug Relay, there are 3 places you config
 
 1. [Create Azure Relay resource](https://ms.portal.azure.com/#create/Microsoft.Relay). Better make one in a region closest to your location.
 1. Once created, switch to the resource, and select `Hybrid Connections` option in the vertical panel.
-1. Add a hybrid connection (`+ Hybrid Connection` button), give it a memorable name (e.g. `test` 🙂) - this is your **Relay Name**.
+1. Add a hybrid connection (`+ Hybrid Connection` button), give it a memorable name (e.g. `test` 🙂) - this is your **Hybrid Connection Name**.
 1. Switch to that new hybrid connection, then select `Shared Access Policies` in the vertical panel.
 1. Add a new policy with `Send` and `Listen` permissions.
 1. Once created, copy its `Primary Connection String`, this is your **Connection String**.
@@ -93,7 +93,7 @@ Last command will show you something like this:
 
 Use `primaryConnectionString` or `secondaryConnectionString` value as your **Connection String**.
 
-**Relay Name** would be the one you choose instead of `debugrelayhc1`.
+**Hybrid Connection Name** would be the one you choose instead of `debugrelayhc1`.
 </details>
 
 ### Remotely with `remote_server_demo.py` or your code
@@ -104,20 +104,20 @@ Remote Server example (in `samples/simple_demo/remote_server_demo.py`) assumes t
 and set 2 variables:
 
 1. `AZRELAY_CONNECTION_STRING` to your **Connection String**.
-1. `AZRELAY_NAME` to your **Relay Name**.
+1. `AZRELAY_CONNECTION_NAME` to your **Hybrid Connection Name**.
 
 For example:
 
 ```json
 {
   "AZRELAY_CONNECTION_STRING": "Endpoint=sb://mydebugrelay1.servicebus.windows.net/;SharedAccessKeyName=sendlisten;SharedAccessKey=REDACTED1;EntityPath=debugrelayhc1",
-  "AZRELAY_NAME": "debugrelayhc1"
+  "AZRELAY_CONNECTION_NAME": "debugrelayhc1"
 }
 ```
 
 Make sure you add `.azrelay.json` to `.gitignore` so won't be committed.
 
-**Option 2**: You can assign these 2 variables as environment variables: `AZRELAY_CONNECTION_STRING` and `AZRELAY_NAME` instead.
+**Option 2**: You can assign these 2 variables as environment variables: `AZRELAY_CONNECTION_STRING` and `AZRELAY_CONNECTION_NAME` instead.
 
 ### Prepare local Visual Studio Code
 
@@ -125,15 +125,15 @@ Use `.azrelay.json` file in the root of your workspace as above or `.vscode/sett
 
 ```json
 {
-  "azure-debug-relay.hybrid-connection-string": "Endpoint=sb://your-relay.servicebus.windows.net/;SharedAccessKeyName=key_name;SharedAccessKey=REDACTED;EntityPath=test",
+  "azure-debug-relay.azrelay-connection-string": "Endpoint=sb://your-relay.servicebus.windows.net/;SharedAccessKeyName=key_name;SharedAccessKey=REDACTED;EntityPath=test",
 
-  "azure-debug-relay.hybrid-connection-name": "test",  
+  "azure-debug-relay.azrelay-connection-name": "test",
 }
 ```
 
-> Whenever Azure Debug Relay VS Code extension detects non-empty `azure-debug-relay.hybrid-connection-string` and `azure-debug-relay.hybrid-connection-name` settings (`vscode/settings.json`) or `AZRELAY_CONNECTION_STRING` and `AZRELAY_NAME` in `.azrelay.json` file, it launches Azure Relay Bridge every time a debugging session with debugpy in `listen` mode is about to begin. If extension settings are not empty and `.azrelay.json` is present, Azure Relay Bridge prefers values from the extension settings (`vscode/settings.json`).
+> Whenever Azure Debug Relay VS Code extension detects non-empty `azure-debug-relay.hybrid-connection-string` and `azure-debug-relay.hybrid-connection-name` settings (`vscode/settings.json`) or `AZRELAY_CONNECTION_STRING` and `AZRELAY_CONNECTION_NAME` in `.azrelay.json` file, it launches Azure Relay Bridge every time a debugging session with debugpy in `listen` mode is about to begin. If extension settings are not empty and `.azrelay.json` is present, Azure Relay Bridge prefers values from the extension settings (`vscode/settings.json`).
 
-Visual Studio Code extension ignores `AZRELAY_CONNECTION_STRING` and `AZRELAY_NAME` environment variables.
+Visual Studio Code extension ignores `AZRELAY_CONNECTION_STRING` and `AZRELAY_CONNECTION_NAME` environment variables.
 
 ### Start debugging in Visual Studio Code
 
@@ -223,13 +223,13 @@ Another approach is to makes sure the debugging session only starts on one node.
 from azdebugrelay import DebugRelay, DebugMode
 
 access_key_or_connection_string = "AZURE RELAY HYBRID CONNECTION STRING OR ACCESS KEY"
-relay_name = "RELAY NAME" # your Hybrid Connection name
+relay_connection_name = "HYBRID CONNECTION NAME" # your Hybrid Connection name
 debug_mode = DebugMode.Connect # or DebugMode.WaitForConnection if connecting from another end
 hybrid_connection_url = "HYBRID CONNECTION URL" # can be None if access_key_or_connection_string is a connection string
 host = "127.0.0.1" # local hostname or ip address the debugger starts on
 port = 5678 # any available port that you can use within your machine
 
-debug_relay = DebugRelay(access_key_or_connection_string, relay_name, debug_mode, hybrid_connection_url, host, port)
+debug_relay = DebugRelay(access_key_or_connection_string, relay_connection_name, debug_mode, hybrid_connection_url, host, port)
 debug_relay.open()
 
 # attach to a remote debugger (usually from remote server code) with debug_mode = DebugMode.Connect
@@ -243,7 +243,7 @@ debug_relay.close()
 ```
 
 * `access_key_or_connection_string` - SAS Policy key or Connection String for Azure Relay Hybrid Connection. Must have `Send` and `Listen` permissions
-* `relay_name` - name of the Hybrid Connection
+* `relay_connection_name` - name of the Hybrid Connection
 * `debug_mode` - debug connection mode. `DebugMode.WaitForConnection` when starting in listening mode, `DebugMode.Connect` for attaching to a remote debugger.
 * `hybrid_connection_url` - Hybrid Connection URL. Required when access_key_or_connection_string as an access key, otherwise is ignored and may be None.
 * `host` - Local hostname or ip address the debugger starts on, `127.0.0.1` by default
@@ -261,6 +261,15 @@ Reasons:
 A [private fork](https://github.com/vladkol/azure-relay-bridge) we are currently using is only to provide .NET Core 3.1 builds of the most recent code. There is a pending pul-requests: [one](https://github.com/Azure/azure-relay-bridge/pull/22) and [two](https://github.com/Azure/azure-relay-bridge/pull/19).
 
 ### Known issues
+
+> **Extension and python module fail complaining about `AZRELAY_CONNECTION_NAME` or `azrelay-connection-name`**.
+
+**Reason**: It is a breaking change in 0.2.0. We changed configuration and environment variables name from `AZRELAY_NAME` to `AZRELAY_CONNECTION_NAME`. VS Code extension setting names we also renamed:
+
+* `hybrid-connection-string` to **azrelay-connection-string**
+* `azrelay-connection-name` to **azrelay-connection-name**
+
+**Workaround**: Modify your `.azrelay.json`, environment variables or `.vscode/settings.json` files accordingly.
 
 > **On macOS, there may be a situation when Azure Relay Bridge (`azbridge`) cannot connect when creating a local forwarder** (`-L` option).
 
