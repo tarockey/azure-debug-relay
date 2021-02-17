@@ -80,7 +80,7 @@ except ComputeTargetException:
         show_output=True, min_node_count=None, timeout_in_minutes=20)
 
 # store the connection string in AML workspace Key Vault
-# (secret name is 'debugrelay' + MD5(hybrid_connection_string) )
+# (secret name is 'debugrelay-' + MD5(hybrid_connection_string) )
 hybrid_connection_string_secret =\
     f"debugrelay-{hashlib.md5(hybrid_conn_connection_string.encode('utf-8')).hexdigest()}"
 workspace.get_default_keyvault().set_secret(hybrid_connection_string_secret, hybrid_conn_connection_string)

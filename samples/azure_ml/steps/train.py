@@ -47,13 +47,19 @@ def _main():
         debugpy.connect((host, port))
         print(f"Debugpy is connected!")
 
-    do_work(debug=debug)
+    train_job(debug=debug)
 
     if debug_relay is not None:
         debug_relay.close()
 
 
-def do_work(debug: bool = False):
+def train_job(debug: bool = False):
+    """This is supposed to be a function with traning code.
+    We have a breakpoint here!
+
+    Args:
+        debug (bool, optional): Debugging mode. Defaults to False.
+    """
     if debug:
         debugpy.breakpoint()
     print(f"Doing my work. Debug mode is {debug}.")
