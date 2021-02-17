@@ -59,7 +59,7 @@ def _check_for_debugging(args) -> DebugRelay:
     parser = argparse.ArgumentParser()
     parser.add_argument('--debug', action='store',
                         default="none", choices=['attach', 'listen', 'none'], required=False)
-    options = parser.parse_args(args=args)
+    options, _ = parser.parse_known_args(args=args)
     if options.debug != "none":
         print(f"Starting DebugRelay in `{options.debug}` mode.")
 
@@ -72,7 +72,7 @@ def _check_for_debugging(args) -> DebugRelay:
             debug_relay = DebugRelay.from_environment(debug_mode=mode)
         
         # you can also create DebugRelay directly by providing connection string and the rest of its configuration:
-        # debug_relay = DebugRelay(access_key_or_connection_string, relay_name, debug_mode, hybrid_connection_url, port)
+        # debug_relay = DebugRelay(access_key_or_connection_string, relay_connection_name, debug_mode, hybrid_connection_url, port)
         
         if debug_relay is None:
             print("Cannot create Debug Relay due to missing configuration.")

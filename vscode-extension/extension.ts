@@ -9,8 +9,8 @@ var hasCredentialsFile = false
 function readConfig(){
     var config = vscode.workspace.getConfiguration("azure-debug-relay")
     if (config) {
-        hybridConnectionConnectionString = config.get("hybrid-connection-string") as string
-        hybridConnectionName = config.get("hybrid-connection-name") as string
+        hybridConnectionConnectionString = config.get("azrelay-connection-string") as string
+        hybridConnectionName = config.get("azrelay-connection-name") as string
     }
 }
 
@@ -20,7 +20,7 @@ function getConfigOption(): string {
     
     if (hybridConnectionName && hybridConnectionName.length > 0 &&
         hybridConnectionConnectionString && hybridConnectionConnectionString.length > 0) {
-        option = `--connection-string \"${hybridConnectionConnectionString}\" --relay-name \"${hybridConnectionName}\"`
+        option = `--connection-string \"${hybridConnectionConnectionString}\" --connection-name \"${hybridConnectionName}\"`
     }
     else if (hasCredentialsFile) {
         option = "--config-file .azrelay.json"

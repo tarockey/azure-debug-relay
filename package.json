@@ -2,7 +2,7 @@
     "name": "azure-debug-relay",
     "displayName": "Azure Debug Relay",
     "description": "Azure Debug Relay Debugger Extension for Python",
-    "version": "0.1.10",
+    "version": "0.2.0",
     "publisher": "VladKolesnikov-vladkol",
     "repository": "https://github.com/vladkol/azure-debug-relay",
     "engines": {
@@ -33,7 +33,7 @@
             "type": "object",
             "title": "Azure Debug Relay",
             "properties": {
-                "azure-debug-relay.hybrid-connection-string": {
+                "azure-debug-relay.azrelay-connection-string": {
                     "type": [
                         "string"
                     ],
@@ -41,7 +41,7 @@
                     "description": "Connection String of an Azure Relay Hybrid Connection",
                     "scope": "machine-overridable"
                 },
-                "azure-debug-relay.hybrid-connection-name": {
+                "azure-debug-relay.azrelay-connection-name": {
                     "type": [
                         "string"
                     ],

@@ -37,6 +37,21 @@
             "console": "integratedTerminal"
         },
         {
+            "name": "Python: Listen for AML",
+            "type": "python",
+            "request": "attach",
+            "listen": {
+                "host": "127.0.0.1",
+                "port": 5678
+            },
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}/samples/azure_ml_simple/steps",
+                    "remoteRoot": "."
+                }
+            ]
+        },
+        {
             "name": "Python: Listen 5678",
             "type": "python",
             "request": "attach",
