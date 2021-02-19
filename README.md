@@ -169,7 +169,7 @@ When debugging `remote_server_demo.py`, the debugger maps `./samples/simple_demo
 
 If everything works as it's supposed to, you will hit a breakpoint in your local Visual Studio Code.
 
-> Due to a limitation we are trying to overcome,
+> Due to [a limitation we are trying to overcome](https://github.com/vladkol/azure-debug-relay/issues/11),
 if a local debugger is not listening by the time Azure Debug Relay starts on a remote server,
 the debugging session will not be established, and remote code will be stuck in `debugpy.connect`.
 The workaround is to restart the remote process and try again.
