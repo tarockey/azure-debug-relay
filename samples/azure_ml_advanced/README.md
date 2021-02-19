@@ -4,6 +4,8 @@ This sample demonstrates how to debug a pipeline with [ParallelRunStep](https://
 
 To make sure we only debug it on a single node, we check that `AZ_BATCH_IS_CURRENT_NODE_MASTER` environment variable equals `true`.
 
+When switching between steps and therefore between servers, your local debugging session in VS Code will disconnect. Start the same one (`Python: Listen 5678`) as soon as possible, before another server tries to connect (with Azure ML you usually have a minute or so).
+
 ## Configuration
 
 Create an environment or set the following environment variables:

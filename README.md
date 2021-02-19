@@ -169,6 +169,11 @@ When debugging `remote_server_demo.py`, the debugger maps `./samples/simple_demo
 
 If everything works as it's supposed to, you will hit a breakpoint in your local Visual Studio Code.
 
+> Due to a limitation we are trying to overcome,
+if a local debugger is not listening by the time Azure Debug Relay starts on a remote server,
+the debugging session will not be established, and remote code will be stuck in `debugpy.connect`.
+The workaround is to restart the remote process and try again.
+
 ## Azure Debug Relay Python API
 
 `remote_server_demo.py` shows how you can use Azure Debug Relay (azure-debug-relay package) with your code.
@@ -225,6 +230,14 @@ Look at the [advanced sample's readme file](samples/azure_ml_advanced/README.md)
 This is an advanced scenario that [we are currently working on](https://github.com/vladkol/azure-debug-relay/issues/10).
 While it is possible technically with Azure Relay Bridge and [compound configurations](https://code.visualstudio.com/docs/editor/debugging#_compound-launch-configurations) in Visual Studio code, making that work seamlessly is not straightforward.
 
+As a *workaround* (not a perfect one), make multiple copies of your code,
+open it in multiple VS Code windows,
+and start multiple debugging sessions **each on a different Hybrid Connection and a different port**.
+
+Please note that multiple Hybrid Connections and therefore configurations (AZRELAY_CONNECTION_NAME, etc.) are required.
+
+Because you will have multiple VS Code listeners on the same machine, each needs to be on a different port (like we have now on `5678`). Same applies to remote servers - each remote machine must use a unique debugging port.
+
 ## Troubleshooting
 
 Why using [Azure Relay Bridge](https://github.com/Azure/azure-relay-bridge) which is a .NET Core application that we have to install and use via `subprocess` calls?
@@ -268,6 +281,6 @@ A [private fork](https://github.com/vladkol/azure-relay-bridge) we are currently
 
 > **I do everything right, but nothing works**
 
-**Reason**: Stop all debugging sessions (if any). Kill all `azbridge` processes. Try again.
+**Reason**: Stop all debugging sessions (if any). Kill all `azbridge` processes locally and remotely. Try again.
 
 Doesn't help? [File an issue](https://github.com/vladkol/azure-debug-relay/issues/new)! Thank you!
