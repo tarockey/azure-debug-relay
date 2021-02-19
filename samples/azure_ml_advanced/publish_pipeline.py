@@ -16,9 +16,6 @@ from azureml.core import RunConfiguration
 from azureml.pipeline.core import PipelineParameter
 from azureml.pipeline.steps import PythonScriptStep
 from azureml.pipeline.steps import ParallelRunStep, ParallelRunConfig
-from azureml.pipeline.steps import EstimatorStep
-from azureml.core.runconfig import MpiConfiguration
-from azureml.train.dnn import TensorFlow
 
 
 # A set of variables that you are required to provide is below.
@@ -103,20 +100,22 @@ def get_pipeline(aml_compute: ComputeTarget, blob_ds: Datastore, batch_env: Envi
 
     # Pipeline parameters to use with every run
     is_debug = PipelineParameter("is_debug", default_value=False)
+    debug_port = PipelineParameter("debug_port", default_value=5678)
     relay_connection_name = PipelineParameter(
         "debug_relay_connection_name", default_value=default_relay_connection_name)
 
     single_step_config = RunConfiguration()
     single_step_config.environment = batch_env
     single_step = PythonScriptStep(
-        name="single_step",
-        script_name="samples/ml_pipeline_demo/steps/single_step.py",
+        name=f"single-step",
+        script_name="samples/azure_ml_advanced/steps/single_step.py",
+        source_directory=".",
         runconfig=single_step_config,
         arguments=[
             "--pipeline-files", pipeline_files,
             "--is-debug", is_debug,
             "--debug-relay-connection-name", relay_connection_name,
-            "--debug-port", 5678,
+            "--debug-port", debug_port,
             "--debug-relay-connection-string-secret", debug_connection_string_secret_name
         ],
         inputs=[],
@@ -128,7 +127,8 @@ def get_pipeline(aml_compute: ComputeTarget, blob_ds: Datastore, batch_env: Envi
     output_dir = PipelineData("output_dir")
 
     parallel_run_config = ParallelRunConfig(
-        entry_script="samples/ml_pipeline_demo/steps/parallel_step.py",
+        entry_script="samples/azure_ml_advanced/steps/parallel_step.py",
+        source_directory=".",
         mini_batch_size="5",
         output_action="summary_only",
         environment=batch_env,
@@ -139,14 +139,14 @@ def get_pipeline(aml_compute: ComputeTarget, blob_ds: Datastore, batch_env: Envi
         process_count_per_node=1)
 
     parallelrun_step = ParallelRunStep(
-        name="predict-digits-mnist",
+        name="parallel-run-step",
         parallel_run_config=parallel_run_config,
         inputs=[pipeline_files],
         output=output_dir,
         arguments=[
             "--is-debug", is_debug,
             "--debug-relay-connection-name", relay_connection_name,
-            "--debug-port", 5679,
+            "--debug-port", debug_port,
             "--debug-relay-connection-string-secret", debug_connection_string_secret_name
         ],
         allow_reuse=False
@@ -154,39 +154,10 @@ def get_pipeline(aml_compute: ComputeTarget, blob_ds: Datastore, batch_env: Envi
 
     parallelrun_step.run_after(single_step)
 
-    mpi = MpiConfiguration()
-    mpi.process_count_per_node = 1
-
-    est = TensorFlow(
-        source_directory=".",
-        entry_script='samples/ml_pipeline_demo/steps/mpi_step.py',
-        compute_target=aml_compute,
-        node_count=2,
-        distributed_training=mpi,
-        pip_packages=['keras==1.2.2', 'pandas', 'scikit-learn'],
-        framework_version='1.13',
-        use_gpu=False)
-
-    mpi_step = EstimatorStep(
-        name="mpi_step",
-        estimator=est,
-        estimator_entry_script_arguments=[
-            "--input-ds", pipeline_files,
-            "--is-debug", is_debug,
-            "--debug-relay-connection-name", relay_connection_name,
-            "--debug-port", 5680,
-            "--debug-relay-connection-string-secret", debug_connection_string_secret_name
-            ],
-        inputs=[pipeline_files],
-        outputs=[],
-        compute_target=aml_compute)
-
-    mpi_step.run_after(parallelrun_step)
-
     print("Pipeline Steps Created")
 
     steps = [
-        single_step, parallelrun_step, mpi_step
+        single_step, parallelrun_step
     ]
 
     print(f"Returning {len(steps)} steps")

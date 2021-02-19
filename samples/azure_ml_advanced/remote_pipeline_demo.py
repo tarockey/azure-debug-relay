@@ -13,12 +13,14 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--is-debug", type=bool, required=False, default=False)
+    parser.add_argument("--debug-port", type=int, required=False, default=5678)
     parser.add_argument("--debug-relay-connection-name",
                         type=str, required=False, default="")
     options, _ = parser.parse_known_args()
 
     pipeline_parameters = {
         "is_debug": options.is_debug,
+        "debug_port": options.debug_port,
         }
     if options.is_debug and options.debug_relay_connection_name != "":
         pipeline_parameters.update({
