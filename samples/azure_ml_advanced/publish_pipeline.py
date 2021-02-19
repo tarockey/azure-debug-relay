@@ -16,9 +16,6 @@ from azureml.core import RunConfiguration
 from azureml.pipeline.core import PipelineParameter
 from azureml.pipeline.steps import PythonScriptStep
 from azureml.pipeline.steps import ParallelRunStep, ParallelRunConfig
-from azureml.pipeline.steps import EstimatorStep
-from azureml.core.runconfig import MpiConfiguration
-from azureml.train.dnn import TensorFlow
 
 
 # A set of variables that you are required to provide is below.
@@ -157,44 +154,10 @@ def get_pipeline(aml_compute: ComputeTarget, blob_ds: Datastore, batch_env: Envi
 
     parallelrun_step.run_after(single_step)
 
-    mpi = MpiConfiguration()
-    mpi.process_count_per_node = 1
-
-    est = TensorFlow(
-        source_directory=".",
-        entry_script='samples/azure_ml_advanced/steps/mpi_step.py',
-        compute_target=aml_compute,
-        node_count=2,
-        distributed_training=mpi,
-        pip_packages=[
-            'keras==1.2.2', 'pandas', 'scikit-learn',
-            'argparse==1.4.0',
-            'azureml-core==1.22.0',
-            'debugpy==1.2.1',
-            'azure-debug-relay'],
-        framework_version='1.13',
-        use_gpu=False)
-
-    mpi_step = EstimatorStep(
-        name="mpi-step",
-        estimator=est,
-        estimator_entry_script_arguments=[
-            "--input-ds", pipeline_files,
-            "--is-debug", is_debug,
-            "--debug-relay-connection-name", relay_connection_name,
-            "--debug-port", debug_port,
-            "--debug-relay-connection-string-secret", debug_connection_string_secret_name
-            ],
-        inputs=[pipeline_files],
-        outputs=[],
-        compute_target=aml_compute)
-
-    mpi_step.run_after(parallelrun_step)
-
     print("Pipeline Steps Created")
 
     steps = [
-        single_step, parallelrun_step, mpi_step
+        single_step, parallelrun_step
     ]
 
     print(f"Returning {len(steps)} steps")
