@@ -4,7 +4,8 @@ import horovod.keras as hvd
 from keras import backend as K
 import tensorflow as tf
 import debugpy
-from debug_utils import start_remote_debugging_from_args
+from samples.azure_ml_advanced.steps.amldebugutils import *
+
 
 hvd.init()
 config = tf.ConfigProto()

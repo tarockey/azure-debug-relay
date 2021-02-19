@@ -1,5 +1,9 @@
 # Debugging Advanced Azure Machine Learning Pipelines
 
+This sample demonstrates how to debug a pipeline with [ParallelRunStep](https://docs.microsoft.com/en-us/python/api/azureml-pipeline-steps/azureml.pipeline.steps.parallelrunstep?view=azure-ml-py).
+
+To make sure we only debug it on a single node, we check that `AZ_BATCH_IS_CURRENT_NODE_MASTER` environment variable equals `true`.
+
 ## Configuration
 
 Create an environment or set the following environment variables:
@@ -20,6 +24,6 @@ Create an environment or set the following environment variables:
 
 ## How to run
 
-1. Start debugging with `Python: Listen for Advanced AML` configuration.
-1. Run `python3 samples/azure_ml_advanced/remote_pipeline_demo.py --is-debug true [--relay_name <hybrid-connection-name>]`
+1. Start debugging with `Python: Listen 5678` configuration.
+1. Run `python3 samples/azure_ml_advanced/remote_pipeline_demo.py --is-debug true --debug-port 5678 [--relay_name <hybrid-connection-name>]`
 in terminal **on the same machine**. Here **hybrid-connection-name** is a name of Azure Relay Hybrid Connection which Azure Relay Shared Access Policy above has `Listen` and `Send` permissions on.

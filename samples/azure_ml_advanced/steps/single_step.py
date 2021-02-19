@@ -2,7 +2,8 @@
 import argparse
 import os
 import debugpy
-from debug_utils import start_remote_debugging_from_args
+from samples.azure_ml_advanced.steps.amldebugutils import *
+
 
 def main():
 

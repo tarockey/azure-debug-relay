@@ -43,8 +43,6 @@ if azrelay_connection_string is None or azrelay_connection_name is None:
 
 # load workspace from config.json file
 this_script_dir = os.path.dirname(os.path.abspath(__file__))
-steps_folder = "steps"
-steps_path = os.path.join(this_script_dir, steps_folder)
 interactive_auth = InteractiveLoginAuthentication()
 try:
     workspace = Workspace.from_config(auth=interactive_auth)
@@ -95,7 +93,7 @@ conda_dependencies.add_pip_package("debugpy")
 conda_dependencies.add_pip_package("azure-debug-relay")
 
 train_step = PythonScriptStep(name='Train Step with Debugging',
-                              script_name="train.py",
+                              script_name="samples/azure_ml_simple/steps/train.py",
                               arguments=[
                                   "--debug", "attach",
                                   # passing connection string secret's name, not the connection string itself
@@ -103,7 +101,7 @@ train_step = PythonScriptStep(name='Train Step with Debugging',
                                   "--debug-relay-connection-name", azrelay_connection_name,
                                   "--debug-port", debug_port
                               ],
-                              source_directory=steps_path,
+                              source_directory=".",
                               compute_target=compute_target,
                               runconfig=run_config,
                               allow_reuse=False)

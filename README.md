@@ -169,52 +169,6 @@ When debugging `remote_server_demo.py`, the debugger maps `./samples/simple_demo
 
 If everything works as it's supposed to, you will hit a breakpoint in your local Visual Studio Code.
 
-### Azure Machine Learning samples
-
-Simple Azure ML sample is located in `samples/azure_ml_simple` directory.
-
-It has 2 components:
-
-1. `deploy_and_run.py` script that deploys and launches an Azure ML pipeline with a single step.
-2. `steps/train.py` script which contains that simple step.
-
-Look at the [sample's readme file](samples/azure_ml_simple/README.md).
-
-For Azure ML sample, configuration `Python: Listen for AML` has different mappings:
-
-```json
-"pathMappings": [
-    {
-        "localRoot": "${workspaceFolder}/samples/azure_ml_simple/steps",
-        "remoteRoot": "."
-    }
-]
-```
-
-This is because Azure ML deploys a container with files in `steps` directory
-which will end up being current directory when running in on an Azure ML Compute target.
-
-## Debugging multiple remote code instances
-
-If you want to debug multiple instances of the same code running on different servers, each debugging session must use a different port.
-
-Notice that this workspace has 2 "listen" configurations: "Python: Listen 567**8**" and "Python: Listen 567**9**", they use 2 different ports: 5678 and 5679. It also has a **compound** configuration **"Python: Two Listeners"** where both listeners start at the same time. Use this as an example of debugging multiple remote servers.
-
-**Each server must be configured with a unique port number.**
-You may want to store a collections of available port numbers in a persistent data structure
-where you can "borrow" ports from using any distributed locking mechanism.
-
-For example, on a Kubernetes cluster you can use
-[etcd locks](https://python-etcd3.readthedocs.io/en/latest/usage.html#etcd3.Lock).
-Name those resources to lock after port numbers.
-
-On Azure Machine Learning, you can leverage [Run.add_properties()](https://docs.microsoft.com/en-us/python/api/azureml-core/azureml.core.run(class)?view=azure-ml-py#add-properties-properties-) function.
-If property with a certain name (such as a port number) already exists,
-add_properties() call with the same name will fail with an exception.
-
-Another approach is to makes sure the debugging session only starts on one node. For example, on Azure Batch multi-instance tasks
-`AZ_BATCH_IS_CURRENT_NODE_MASTER` environment variable equals `true` when running on the master node.
-
 ## Azure Debug Relay Python API
 
 `remote_server_demo.py` shows how you can use Azure Debug Relay (azure-debug-relay package) with your code.
@@ -250,6 +204,26 @@ debug_relay.close()
 * `hybrid_connection_url` - Hybrid Connection URL. Required when access_key_or_connection_string as an access key, otherwise is ignored and may be None.
 * `host` - Local hostname or ip address the debugger starts on, `127.0.0.1` by default
 * `port` - debugging port, `5678` by default
+
+### Azure Machine Learning samples
+
+**Simple Azure ML sample** is located in `samples/azure_ml_simple` directory.
+
+It has 2 components:
+
+1. `deploy_and_run.py` script that deploys and launches an Azure ML pipeline with a single step.
+2. `steps/train.py` script which contains that simple step.
+
+Look at the [sample's readme file](samples/azure_ml_simple/README.md).
+
+**Advanced Azure Machine Learning sample** is located in `samples/azure_ml_advanced`, and demonstrates a complex debugging scenario with parallel steps.
+
+Look at the [advanced sample's readme file](samples/azure_ml_advanced/README.md).
+
+## Debugging across multiple servers at the same time
+
+This is an advanced scenario that [we are currently working on](https://github.com/vladkol/azure-debug-relay/issues/10).
+While it is possible technically with Azure Relay Bridge and [compound configurations](https://code.visualstudio.com/docs/editor/debugging#_compound-launch-configurations) in Visual Studio code, making that work seamlessly is not straightforward.
 
 ## Troubleshooting
 
