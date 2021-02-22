@@ -20,12 +20,12 @@ Create an environment or set the following environment variables:
 * `REGION` - An Azure region to create a workspace in (if one doesn't exist)
 * `COMPUTE_NAME` - name of Azure Machine Learning Compute Cluster (will be created if doesn't exist)
 * `PIPELINE_NAME` - name of an Azure Machine Learning Pipeline to publish
-* `DEBUG_CONNECTION_STRING` - Azure Relay Shared Access Policy connection string
+* `DEBUG_GLOBAL_AZRELAY_CONNECTION_STRING` - Azure Relay Shared Access Policy connection string
 (must have `Listen` and `Send` permissions)
 * `DEFAULT_DEBUG_CONNECTION_NAME` - default Azure Relay Hybrid Connection to use for debugging.
 
 ## How to run
 
-1. Start debugging with `Python: Listen 5678` configuration.
-1. Run `python3 samples/azure_ml_advanced/remote_pipeline_demo.py --is-debug true --debug-port 5678 [--relay_name <hybrid-connection-name>]`
+1. Start debugging with `Python: AML Adv 2 Listeners` configuration.
+1. Run `python3 samples/azure_ml_advanced/remote_pipeline_demo.py --is-debug true --debug-relay-connection-name <hybrid-connection-name>`
 in terminal **on the same machine**. Here **hybrid-connection-name** is a name of Azure Relay Hybrid Connection which Azure Relay Shared Access Policy above has `Listen` and `Send` permissions on.

@@ -9,7 +9,7 @@ from azdebugrelay import DebugRelay, DebugMode
 def start_remote_debugging(
         debug_relay_connection_string_secret: str,
         debug_relay_connection_name:str,
-        debug_port,
+        debug_port: int,
         ):
     # get connection string from the workspace Key Vault
     run = Run.get_context()
@@ -26,10 +26,10 @@ def start_remote_debugging(
     debug_mode = DebugMode.Connect
     hybrid_connection_url = None  # can keep it None because using a connection string
     host = "127.0.0.1"  # local hostname or ip address the debugger starts on
-    port = int(debug_port)
+    port = debug_port
 
     debug_relay = DebugRelay(
-        connection_string, relay_connection_name, debug_mode, hybrid_connection_url, host, port)
+        connection_string, relay_connection_name, debug_mode, hybrid_connection_url, host, [str(port)])
     debug_relay.open(wait_for_connection=False)
     if debug_relay.is_running():
         print(f"Starting debugpy session on {host}:{port}. " +

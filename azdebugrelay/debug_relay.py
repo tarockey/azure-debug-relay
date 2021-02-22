@@ -154,6 +154,11 @@ class DebugRelay(object):
         over_timeout = False
         connected = False
 
+        if self.relay_subprocess.poll() is not None:
+            msg = "Azure Relay Bridge stopped too soon!"
+            self.logger.critical(msg)
+            raise RuntimeError(msg)
+
         # If recognizing Azure Relay Bridge connection status, parse its output.
         if wait_for_connection:
             # Iterate over Azure Relay Bridge output lines, 
@@ -161,6 +166,7 @@ class DebugRelay(object):
             for line in iter(self.relay_subprocess.stdout.readline, ''):
                 self.logger.info(line)
                 if self.relay_subprocess.poll() is not None:
+                    self.logger.critical("Azure Relay Bridge stopped.")
                     break
                 if wait_for_connection and not connected:
                     if line.find("LocalForwardHostStart,") != -1:
@@ -169,7 +175,7 @@ class DebugRelay(object):
                         remote_forward_ready = True
                     if remote_forward_ready and local_forward_ready:
                         connected = True
-                        msg = "Azure Relay Bridge is ready!"
+                        msg = "Azure Relay Bridge is connected!"
                         self.logger.info(msg)
 
                     time_delta = time.perf_counter() - start
@@ -179,6 +185,9 @@ class DebugRelay(object):
                         break
 
                 self._handle_output(line)
+        else:
+            msg = "Azure Relay Bridge is running!"
+            self.logger.info(msg)
 
         # Handle over-timeout status
         if over_timeout:
@@ -186,9 +195,6 @@ class DebugRelay(object):
             self.logger.critical(msg)
             self.close()
             raise TimeoutError(msg)
-
-        msg = "Azure Relay Bridge is ready!"
-        self.logger.info(msg)
 
 
     def close(self):
@@ -247,9 +253,11 @@ class DebugRelay(object):
             except subprocess.TimeoutExpired:
                 return True
             except:
-                self.relay_subprocess = None 
+                self.relay_subprocess = None
         return False
 
+    def _handle_output(line: str):
+        pass
 
     @staticmethod
     def from_config(config_file: str, 
