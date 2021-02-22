@@ -28,9 +28,8 @@ app_secret = os.environ.get("APP_SECRET")
 region = os.environ.get("REGION")
 compute_name = os.environ.get("COMPUTE_NAME")
 pipeline_name = os.environ.get("PIPELINE_NAME")
-debug_connection_string = os.environ.get("DEBUG_CONNECTION_STRING")
-default_relay_connection_name = os.environ.get("DEFAULT_DEBUG_CONNECTION_NAME")
-debug_connection_string_secret_name = os.environ.get("DEBUG_CONNECTION_SECRET_NAME", default="debug-azrelay-connection")
+debug_connection_string = os.environ.get("DEBUG_GLOBAL_AZRELAY_CONNECTION_STRING")
+debug_connection_string_secret_name = os.environ.get("DEBUG_GLOBAL_CONNECTION_SECRET_NAME")
 
 def create_and_publish_pipeline() -> any:
     """
@@ -102,7 +101,7 @@ def get_pipeline(aml_compute: ComputeTarget, blob_ds: Datastore, batch_env: Envi
     is_debug = PipelineParameter("is_debug", default_value=False)
     debug_port = PipelineParameter("debug_port", default_value=5678)
     relay_connection_name = PipelineParameter(
-        "debug_relay_connection_name", default_value=default_relay_connection_name)
+        "debug_relay_connection_name", default_value="")
 
     single_step_config = RunConfiguration()
     single_step_config.environment = batch_env
