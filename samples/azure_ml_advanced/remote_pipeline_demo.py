@@ -22,7 +22,10 @@ def main():
         "is_debug": options.is_debug,
         "debug_port": options.debug_port,
         }
-    if options.is_debug and options.debug_relay_connection_name != "":
+    if options.is_debug:
+        if options.debug_relay_connection_name == "":
+            raise ValueError("Hybrid connection name cannot be empty!")
+
         pipeline_parameters.update({
             "debug_relay_connection_name": options.debug_relay_connection_name
             })
