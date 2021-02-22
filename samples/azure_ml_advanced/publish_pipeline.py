@@ -115,7 +115,7 @@ def get_pipeline(aml_compute: ComputeTarget, blob_ds: Datastore, batch_env: Envi
             "--pipeline-files", pipeline_files,
             "--is-debug", is_debug,
             "--debug-relay-connection-name", relay_connection_name,
-            "--debug-port", debug_port,
+            "--debug-port", 5678, # debug_port,
             "--debug-relay-connection-string-secret", debug_connection_string_secret_name
         ],
         inputs=[],
@@ -146,7 +146,7 @@ def get_pipeline(aml_compute: ComputeTarget, blob_ds: Datastore, batch_env: Envi
         arguments=[
             "--is-debug", is_debug,
             "--debug-relay-connection-name", relay_connection_name,
-            "--debug-port", debug_port,
+            "--debug-port", 5679, # debug_port,
             "--debug-relay-connection-string-secret", debug_connection_string_secret_name
         ],
         allow_reuse=False

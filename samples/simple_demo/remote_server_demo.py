@@ -1,7 +1,6 @@
 import os
 import sys
 import argparse
-import debugpy
 import platform
 import pathlib
 from signal import signal, SIGINT
@@ -21,7 +20,7 @@ if _missing_azdebugrelay:
     sys.path.insert(0, _azdebugrelay_dir)
 ###############  
 
-from azdebugrelay import DebugRelay, DebugMode
+from azdebugrelay import DebugRelay, DebugMode, DebugPy
 g_debug_relay = None
 
 def do_work():
@@ -29,7 +28,7 @@ def do_work():
     """
     print("Hello world!")
     plat = platform.platform()
-    debugpy.breakpoint() # you can put a real VSCode breakpoint
+    DebugPy.breakpoint()  # you can put a real VSCode breakpoint
     print(plat) # the debugger will stop here because debugpy.breakpoint() call above
 
 
@@ -84,10 +83,10 @@ def _check_for_debugging(args) -> DebugRelay:
         if debug_relay.is_running():
             print("Connecting to the remote host...")
             if options.debug == "attach":
-                debugpy.connect(("127.0.0.1", 5678))
+                DebugPy.connect(("127.0.0.1", 5678))
             else:
-                debugpy.listen(("127.0.0.1", 5678))
-                debugpy.wait_for_client()
+                DebugPy.listen(("127.0.0.1", 5678))
+                DebugPy.wait_for_client()
             print("Connected!!!")
     return debug_relay
 

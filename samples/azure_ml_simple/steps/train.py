@@ -41,7 +41,7 @@ def _main():
         port = options.debug_port
 
         debug_relay = DebugRelay(
-            connection_string, relay_connection_name, debug_mode, hybrid_connection_url, host, port)
+            connection_string, relay_connection_name, debug_mode, hybrid_connection_url, host, [port])
         debug_relay.open(wait_for_connection=False)
         print(f"Starting debugpy session on {host}:{port}")
         debugpy.connect((host, port))

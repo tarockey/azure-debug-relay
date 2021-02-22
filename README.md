@@ -181,20 +181,24 @@ The workaround is to restart the remote process and try again.
 **azdebugrelay** module contains DebugRelay class that install and launches Azure Relay Bridge:
 
 ```python
-from azdebugrelay import DebugRelay, DebugMode
+from azdebugrelay import DebugRelay, DebugMode, DebugPy
 
 access_key_or_connection_string = "AZURE RELAY HYBRID CONNECTION STRING OR ACCESS KEY"
 relay_connection_name = "HYBRID CONNECTION NAME" # your Hybrid Connection name
 debug_mode = DebugMode.Connect # or DebugMode.WaitForConnection if connecting from another end
 hybrid_connection_url = "HYBRID CONNECTION URL" # can be None if access_key_or_connection_string is a connection string
 host = "127.0.0.1" # local hostname or ip address the debugger starts on
-port = 5678 # any available port that you can use within your machine
+port = "5678" # any available port that you can use within your machine
 
-debug_relay = DebugRelay(access_key_or_connection_string, relay_connection_name, debug_mode, hybrid_connection_url, host, port)
+debug_relay = DebugRelay(access_key_or_connection_string, relay_connection_name, debug_mode, hybrid_connection_url, host, [port])
 debug_relay.open()
 
 # attach to a remote debugger (usually from remote server code) with debug_mode = DebugMode.Connect
-debugpy.connect((host, port))
+DebugPy.connect((host, port))
+# if debug_mode = DebugMode.WaitForConnection, we are going to listen instead
+# DebugPy.listen((host, port))
+# if debug_mode = DebugMode.WaitForConnection, you can start DebugRelay on multiple ports (ports parameter is a list)
+# DebugPy.listen must be called with each of these ports
 
 # Debug, debug, debug
 # ...

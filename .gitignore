@@ -8,6 +8,9 @@ config.json
 # VS Code settings, secrets may be here
 .vscode/settings.json
 
+# Node modules
+node_modules/
+
 # VSCode extension builds
 out/
 
