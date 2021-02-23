@@ -5,18 +5,6 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Python: Azure ML Adv",
-      "type": "python",
-      "request": "launch",
-      "program": "${workspaceFolder}/samples/azure_ml_advanced/remote_pipeline_demo.py",
-      "args": [
-        "--is-debug", "true",
-        "--debug-relay-connection-name", "test"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
       "name": "Run Extension",
       "type": "extensionHost",
       "request": "launch",
@@ -63,11 +51,30 @@
               "remoteRoot": "."
           }
       ]
+  },
+  {
+    "name": "Python: Deploy Azure ML Advanced",
+    "type": "python",
+    "request": "launch",
+    "program": "${workspaceFolder}/samples/azure_ml_advanced/remote_pipeline_demo.py",
+    "args": [
+      "--is-debug", "true",
+      "--debug-relay-connection-name", "${input:hybridConnName}"
+    ],
+    "cwd": "${workspaceFolder}",
+    "console": "integratedTerminal"
   }
   ],
-    "compounds": [
+  "inputs": [
+    {
+      "id": "hybridConnName",
+      "type": "promptString",
+      "description": "Enter Hybrid Connection Name"
+    }
+  ],
+  "compounds": [
         {
-          "name": "Python: AML Adv 2 Listeners",
+          "name": "Python: AML Advanced 2 Listeners",
           "configurations": [
             "Python: Listen 5678", 
             "Python: Listen 5679"

@@ -271,7 +271,7 @@ Then you combine them in `.vscode/launch.json` to as a compound:
 ```json
 "compounds": [
   {
-    "name": "Python: AML Adv 2 Listeners",
+    "name": "Python: AML Advanced 2 Listeners",
     "configurations": [
       "Python: Listen 5678", 
       "Python: Listen 5679"
