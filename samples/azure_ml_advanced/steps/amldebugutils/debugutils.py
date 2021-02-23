@@ -46,7 +46,7 @@ def start_remote_debugging(
 
 def start_remote_debugging_from_args(ignore_debug_flag: bool = False) -> bool:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--is-debug", type=bool, required=False, default=False)
+    parser.add_argument("--is-debug", type=str, required=True)
     parser.add_argument("--debug-relay-connection-name",
                         type=str, required=True)
     parser.add_argument('--debug-port', action='store', type=int,
@@ -55,7 +55,7 @@ def start_remote_debugging_from_args(ignore_debug_flag: bool = False) -> bool:
                         type=str, required=True)
     options, _ = parser.parse_known_args()
 
-    if not options.is_debug and not ignore_debug_flag:
+    if not options.is_debug == 'True' and not ignore_debug_flag:
         return False
 
     if options.debug_relay_connection_string_secret == "" or options.debug_relay_connection_name == "":

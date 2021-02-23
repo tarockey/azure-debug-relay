@@ -14,9 +14,13 @@ from azureml.core.runconfig import Environment, CondaDependencies
 from azureml.pipeline.core import Pipeline, PublishedPipeline, PipelineData
 from azureml.core import RunConfiguration
 from azureml.pipeline.core import PipelineParameter
-from azureml.pipeline.steps import PythonScriptStep
+from azureml.pipeline.steps import PythonScriptStep, MpiStep
 from azureml.pipeline.steps import ParallelRunStep, ParallelRunConfig
+from dotenv import load_dotenv
+from azureml.core import ScriptRunConfig
+from azureml.core.runconfig import MpiConfiguration
 
+load_dotenv()
 
 # A set of variables that you are required to provide is below.
 workspace_name = os.environ.get("WORKSPACE_NAME")
@@ -70,9 +74,20 @@ def create_and_publish_pipeline() -> any:
     batch_env.docker.enabled = True
     batch_env.python.conda_dependencies = batch_conda_deps
 
+
+    curated_env_name = 'AzureML-TensorFlow-2.2-CPU'
+    tf_env = Environment.get(workspace=aml_workspace, name=curated_env_name)
+    tf_env.save_to_directory("env_tf", overwrite=True)
+
+    tf_env = Environment.load_from_directory("env_tf")
+    tf_env.name = "traintf"
+    tf_env.python.conda_dependencies.add_pip_package('argparse==1.4.0')
+    tf_env.python.conda_dependencies.add_pip_package('debugpy==1.2.1')
+    tf_env.python.conda_dependencies.add_pip_package('azure-debug-relay')
+    
     print("Create pipeline steps")
     steps = get_pipeline(
-        aml_compute, aml_workspace.get_default_datastore(), batch_env)
+        aml_compute, aml_workspace.get_default_datastore(), batch_env, tf_env)
 
     print("Publishing pipeline")
     published_pipeline = publish_pipeline(aml_workspace, steps, pipeline_name)
@@ -82,13 +97,14 @@ def create_and_publish_pipeline() -> any:
     return published_pipeline, aml_workspace
 
 
-def get_pipeline(aml_compute: ComputeTarget, blob_ds: Datastore, batch_env: Environment) -> str:
+def get_pipeline(aml_compute: ComputeTarget, blob_ds: Datastore, batch_env: Environment, tf_env: Environment) -> str:
     """
     Creates pipeline steps
     Parameters:
         aml_compute (ComputeTarget): a reference to a compute
         blob_ds (DataStore): a reference to a datastore
         batch_env (Environment): a reference to environment object
+        tf_env (Environment): a horovod/tf environment
     Returns:
         string: a set of pipeline steps
     """
@@ -101,7 +117,7 @@ def get_pipeline(aml_compute: ComputeTarget, blob_ds: Datastore, batch_env: Envi
     is_debug = PipelineParameter("is_debug", default_value=False)
     debug_port = PipelineParameter("debug_port", default_value=5678)
     relay_connection_name = PipelineParameter(
-        "debug_relay_connection_name", default_value="")
+        "debug_relay_connection_name", default_value="none")
 
     single_step_config = RunConfiguration()
     single_step_config.environment = batch_env
@@ -153,10 +169,48 @@ def get_pipeline(aml_compute: ComputeTarget, blob_ds: Datastore, batch_env: Envi
 
     parallelrun_step.run_after(single_step)
 
+    distr_config = MpiConfiguration(process_count_per_node=1, node_count=2)
+
+    src = ScriptRunConfig(
+        source_directory=".",
+        script="samples/azure_ml_advanced/steps/mpi_step.py",
+        arguments=[
+            "--input-ds", pipeline_files,
+            "--is-debug", is_debug,
+            "--debug-relay-connection-name", relay_connection_name,
+            "--debug-port", debug_port,
+            "--debug-relay-connection-string-secret", debug_connection_string_secret_name
+            ],
+        compute_target=compute_name,
+        environment=tf_env,
+        distributed_job_config=distr_config,
+    )
+
+    mpi_step = PythonScriptStep(
+        name="mpi-step",
+        script_name="samples/azure_ml_advanced/steps/mpi_step.py",
+        arguments=[
+            "--input-ds", pipeline_files,
+            "--is-debug", is_debug,
+            "--debug-relay-connection-name", relay_connection_name,
+            "--debug-port", debug_port,
+            "--debug-relay-connection-string-secret", debug_connection_string_secret_name
+            ],
+        compute_target=aml_compute,
+        inputs=[pipeline_files],
+        outputs=[],
+        runconfig=src.run_config,
+        source_directory="."
+    )
+
+    mpi_step.run_after(parallelrun_step)
+
     print("Pipeline Steps Created")
 
     steps = [
-        single_step, parallelrun_step
+        single_step,
+        parallelrun_step,
+        mpi_step
     ]
 
     print(f"Returning {len(steps)} steps")
@@ -220,7 +274,7 @@ def get_workspace(
     return aml_workspace
 
 
-def get_compute(workspace: Workspace, compute_name: str, vm_size: str = "Standard_DS3_v2", vm_priority: str = "lowpriority", min_nodes: int = 0, max_nodes: int = 4,
+def get_compute(workspace: Workspace, compute_name: str, vm_size: str = "Standard_DS3_v2", vm_priority: str = "dedicated", min_nodes: int = 0, max_nodes: int = 4,
                 scale_down: int = 600):
     """
     Returns an existing compute or creates a new one.

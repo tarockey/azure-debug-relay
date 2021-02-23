@@ -10,14 +10,14 @@ def main():
     print("Parsing parameters")
     parser = argparse.ArgumentParser()
     parser.add_argument("--pipeline-files", type=str, required=True)
-    parser.add_argument('--is-debug', required=False, type=bool, default=False)
+    parser.add_argument('--is-debug', type=str, required=True)
     args, _ = parser.parse_known_args()
 
     print(f"Output folder {args.pipeline_files}")
 
     is_debug = args.is_debug
 
-    if is_debug:
+    if is_debug == 'True':
         print("Let's start debugging")
         start_remote_debugging_from_args()
         debugpy.breakpoint()
