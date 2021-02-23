@@ -1,10 +1,12 @@
 from enum import Enum
 import os
+import signal
 import argparse
 import sys
 import logging
 import subprocess
 import stat
+import threading
 import urllib.request
 from pathlib import Path
 import ssl
@@ -53,6 +55,7 @@ class DebugRelay(object):
         "https://github.com/vladkol/azure-relay-bridge/releases/download/v0.2.9/azbridge.0.2.9-rel.win10-x64.zip"
 
     _installed_az_relay = False
+    _relay_config_file = None
 
 
     def __init__(self,
@@ -141,11 +144,21 @@ class DebugRelay(object):
         DebugRelay._install_azure_relay_bridge()
 
         command = f"{DebugRelay.relay_app_name} {self.connection_option} {self.auth_option}"
+        if DebugRelay._relay_config_file is not None:
+            command += f" -f \"{DebugRelay._relay_config_file}\""
         # start Azure Relay Bridge
-        self.relay_subprocess = subprocess.Popen(
-            command, 
-            stdin=None, stderr=subprocess.STDOUT, stdout=subprocess.PIPE,
-            shell=True, universal_newlines=True, close_fds=True)
+        if not DebugRelay.is_windows:
+            self.relay_subprocess = subprocess.Popen(
+                command,
+                preexec_fn=os.setpgrp,
+                stdin=None, stderr=subprocess.STDOUT, stdout=subprocess.PIPE,
+                shell=True, universal_newlines=True, close_fds=True)
+        else:
+            self.relay_subprocess = subprocess.Popen(
+                command, 
+                creationflag = subprocess.CREATE_NEW_PROCESS_GROUP,
+                stdin=None, stderr=subprocess.STDOUT, stdout=subprocess.PIPE,
+                shell=True, universal_newlines=True, close_fds=True)
 
         start = time.perf_counter()
 
@@ -165,6 +178,7 @@ class DebugRelay(object):
             # looking for lines with "LocalForwardHostStart," and "RemoteForwardHostStart," to appear.
             for line in iter(self.relay_subprocess.stdout.readline, ''):
                 self.logger.info(line)
+                print(line)
                 if self.relay_subprocess.poll() is not None:
                     self.logger.critical("Azure Relay Bridge stopped.")
                     break
@@ -177,14 +191,13 @@ class DebugRelay(object):
                         connected = True
                         msg = "Azure Relay Bridge is connected!"
                         self.logger.info(msg)
+                        break
 
                     time_delta = time.perf_counter() - start
                     # did take too long to initialize and connect?
                     if time_delta > self.az_relay_connection_wait_time:
                         over_timeout = True
                         break
-
-                self._handle_output(line)
         else:
             msg = "Azure Relay Bridge is running!"
             self.logger.info(msg)
@@ -195,15 +208,24 @@ class DebugRelay(object):
             self.logger.critical(msg)
             self.close()
             raise TimeoutError(msg)
-
+        elif self.relay_subprocess.poll() is None:
+            threading.Thread(target=self._handle_output, daemon=True).start()
+        else:
+            msg = "Azure Relay Bridge stopped too soon!"
+            self.logger.critical(msg)
+            raise RuntimeError(msg)
+        
 
     def close(self):
         """Stops Azure Relay Bridge process launched by this object
         """
         if self.relay_subprocess is not None:
             if self.is_running():
-                print("Closing Debug Relay...")
-                self.relay_subprocess.terminate()
+                self.logger.info("Closing Debug Relay...")
+                if not DebugRelay.is_windows:
+                    os.killpg(os.getpgid(self.relay_subprocess.pid), signal.SIGTERM)
+                else:
+                    os.kill(self.relay_subprocess.pid, signal.CTRL_C_EVENT)
                 try:
                     self.relay_subprocess.wait(timeout=3)
                 except subprocess.TimeoutExpired:
@@ -221,6 +243,9 @@ class DebugRelay(object):
         DebugRelay._install_azure_relay_bridge()
 
         command = f"{DebugRelay.relay_app_name} {self.connection_option} {self.auth_option}"
+        if DebugRelay._relay_config_file is not None:
+            command += f" -f \"{DebugRelay._relay_config_file}\""
+
         # start Azure Relay Bridge
         detached_relay_subprocess = subprocess.Popen(
             command,
@@ -247,17 +272,23 @@ class DebugRelay(object):
 
     def is_running(self) -> bool:
         if self.relay_subprocess is not None:
-            # subprocess.poll() doesn't always return None for a running process
-            try:
-               self.relay_subprocess.wait(0.005)
-            except subprocess.TimeoutExpired:
+            if self.relay_subprocess.poll() is None:
                 return True
-            except:
+            else:
                 self.relay_subprocess = None
         return False
 
-    def _handle_output(line: str):
-        pass
+
+    def _handle_output(self):
+        for line in iter(self.relay_subprocess.stdout.readline, ''):
+            if line.find("Microsoft.Azure.Relay.Bridge.EventTraceActivity, exception = ") != -1:
+                msg = f"[Azure Relay Bridge FAILURE]: {line}"
+                self.logger.critical(msg)
+                self.close()
+                break
+            else:
+                self.logger.info(line)
+
 
     @staticmethod
     def from_config(config_file: str, 
@@ -324,6 +355,8 @@ class DebugRelay(object):
             azrelay_parent, DebugRelay.relay_app_name)
         relay_file = os.path.join(
             azrelay_folder, DebugRelay.relay_app_name)
+        DebugRelay._relay_config_file = os.path.join(
+            azrelay_folder, DebugRelay.relay_app_name) + ".yml"
 
         exists = os.path.exists(azrelay_folder)
         if not exists:
@@ -364,6 +397,10 @@ class DebugRelay(object):
             os.replace(tmp_link, azrelay_symlink)
             st = os.stat(azrelay_symlink)
             os.chmod(azrelay_symlink, st.st_mode | stat.S_IEXEC)
+
+        if not os.path.exists(DebugRelay._relay_config_file):
+            with open(DebugRelay._relay_config_file, "a") as yml:
+                yml.write("ExitOnForwardFailure: true")
 
         existing_path_var = os.environ["PATH"]
         paths = existing_path_var.split(os.pathsep)

@@ -38,13 +38,13 @@ def _main():
         debug_mode = DebugMode.Connect
         hybrid_connection_url = None # can keep it None because using a connection string
         host = "127.0.0.1"  # local hostname or ip address the debugger starts on
-        port = options.debug_port
+        port = str(options.debug_port)
 
         debug_relay = DebugRelay(
             connection_string, relay_connection_name, debug_mode, hybrid_connection_url, host, [port])
         debug_relay.open(wait_for_connection=False)
         print(f"Starting debugpy session on {host}:{port}")
-        debugpy.connect((host, port))
+        debugpy.connect_with_timeout((host, port))
         print(f"Debugpy is connected!")
 
     train_job(debug=debug)

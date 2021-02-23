@@ -63,8 +63,8 @@ def create_and_publish_pipeline() -> any:
         pip_packages=[
             'argparse==1.4.0',
             'azureml-core==1.22.0',
-            'debugpy==1.2.1'#,
-            #'azure-debug-relay'
+            'debugpy==1.2.1',
+            'azure-debug-relay==0.3.0'
         ])
     batch_env = Environment(name="train-env")
     batch_env.docker.enabled = True
@@ -99,7 +99,6 @@ def get_pipeline(aml_compute: ComputeTarget, blob_ds: Datastore, batch_env: Envi
 
     # Pipeline parameters to use with every run
     is_debug = PipelineParameter("is_debug", default_value=False)
-    debug_port = PipelineParameter("debug_port", default_value=5678)
     relay_connection_name = PipelineParameter(
         "debug_relay_connection_name", default_value="")
 
@@ -114,7 +113,7 @@ def get_pipeline(aml_compute: ComputeTarget, blob_ds: Datastore, batch_env: Envi
             "--pipeline-files", pipeline_files,
             "--is-debug", is_debug,
             "--debug-relay-connection-name", relay_connection_name,
-            "--debug-port", 5678, # debug_port,
+            "--debug-port", 5678,
             "--debug-relay-connection-string-secret", debug_connection_string_secret_name
         ],
         inputs=[],
@@ -145,7 +144,7 @@ def get_pipeline(aml_compute: ComputeTarget, blob_ds: Datastore, batch_env: Envi
         arguments=[
             "--is-debug", is_debug,
             "--debug-relay-connection-name", relay_connection_name,
-            "--debug-port", 5679, # debug_port,
+            "--debug-port", 5679,
             "--debug-relay-connection-string-secret", debug_connection_string_secret_name
         ],
         allow_reuse=False

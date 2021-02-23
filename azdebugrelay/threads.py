@@ -72,4 +72,4 @@ class StoppableThread(threading.Thread):
 
 
     def stop(self):
-        self.raise_exception(KeyboardInterrupt)
+        self.raise_exception(SystemExit)

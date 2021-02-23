@@ -1,6 +1,6 @@
 import os
-import debugpy
 import argparse
+import debugpy
 from samples.azure_ml_advanced.steps.amldebugutils import *
 
 

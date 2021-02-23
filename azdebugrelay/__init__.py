@@ -1,8 +1,9 @@
 from .debug_relay import DebugRelay, DebugMode
-from .debugpyman import DebugPy
+from .debugpyex import DebugPyEx
 
 __all__ = [
     "DebugRelay",
-    "DebugMode",
-    "DebugPy"
+    "DebugMode"
 ]
+
+DebugPyEx.init()
