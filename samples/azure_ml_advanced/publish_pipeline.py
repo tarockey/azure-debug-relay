@@ -64,7 +64,7 @@ def create_and_publish_pipeline() -> any:
             'argparse==1.4.0',
             'azureml-core==1.22.0',
             'debugpy==1.2.1',
-            'azure-debug-relay==0.3.2'
+            'azure-debug-relay==0.3.4'
         ])
     batch_env = Environment(name="train-env")
     batch_env.docker.enabled = True

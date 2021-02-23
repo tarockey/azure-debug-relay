@@ -8,13 +8,12 @@ class DebugPyEx():
     """Use this class instead of debugpy.
     It provides an additional manageability layer on top of debugpy calls.
     """
-    _DEFAULT_CONNECT_TIMEOUT = 30
     _debugpy_connected = False
     _connect_lock = threading.Lock()
 
     def _thread_connect_proc(host, port):
         try:
-            debugpy.connect((host, port))
+            debugpy.connect((str(host), int(port)))
             DebugPyEx._debugpy_connected = True
         except SystemExit:
             # SystemExit is a "legal" way to terminate this thread.
@@ -22,12 +21,7 @@ class DebugPyEx():
 
 
     @staticmethod
-    def init():
-        debugpy.connect_with_timeout = DebugPyEx.connect
-
-
-    @staticmethod
-    def connect(host, port, connect_timeout_seconds: float = _DEFAULT_CONNECT_TIMEOUT) -> bool:
+    def connect(host, port, connect_timeout_seconds) -> bool:
         with DebugPyEx._connect_lock:
             DebugPyEx._debugpy_connected = False
             thread = StoppableThread(target=DebugPyEx._thread_connect_proc, args=(

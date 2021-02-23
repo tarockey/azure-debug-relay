@@ -2,8 +2,7 @@ import argparse
 from copy import Error
 import logging
 from azureml.core import Run
-import debugpy
-from azdebugrelay import DebugRelay, DebugMode
+from azdebugrelay import DebugRelay, DebugMode, debugpy_connect_with_timeout
 
 
 def start_remote_debugging(
@@ -34,7 +33,7 @@ def start_remote_debugging(
     debug_relay.open()
     if debug_relay.is_running():
         print(f"Starting debugpy session on {host}:{port} with timeout {debugpy_connect_timeout} seconds.")
-        if debugpy.connect_with_timeout(host, port, connect_timeout_seconds=debugpy_connect_timeout):
+        if debugpy_connect_with_timeout(host, port, connect_timeout_seconds=debugpy_connect_timeout):
             print(f"Debugpy is connected!")
             return True
         else:

@@ -21,7 +21,7 @@ if _missing_azdebugrelay:
     sys.path.insert(0, _azdebugrelay_dir)
 ###############  
 
-from azdebugrelay import DebugRelay, DebugMode
+from azdebugrelay import DebugRelay, DebugMode, debugpy_connect_with_timeout
 g_debug_relay = None
 
 def do_work():
@@ -84,7 +84,7 @@ def _check_for_debugging(args) -> DebugRelay:
         if debug_relay.is_running():
             print("Connecting to the remote host...")
             if options.debug == "attach":
-                debugpy.connect_with_timeout("127.0.0.1", 5678)
+                debugpy_connect_with_timeout("127.0.0.1", 5678, 15)
             else:
                 debugpy.listen(("127.0.0.1", 5678))
                 debugpy.wait_for_client()

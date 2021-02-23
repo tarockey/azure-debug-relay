@@ -176,7 +176,7 @@ If everything works as it's supposed to, you will hit a breakpoint in your local
 **azdebugrelay** module contains DebugRelay class that install and launches Azure Relay Bridge:
 
 ```python
-from azdebugrelay import DebugRelay, DebugMode
+from azdebugrelay import DebugRelay, DebugMode, debugpy_connect_with_timeout
 
 access_key_or_connection_string = "AZURE RELAY HYBRID CONNECTION STRING OR ACCESS KEY"
 relay_connection_name = "HYBRID CONNECTION NAME" # your Hybrid Connection name
@@ -191,7 +191,7 @@ debug_relay = DebugRelay(access_key_or_connection_string, relay_connection_name,
 debug_relay.open()
 
 # attach to a remote debugger (usually from remote server code) with debug_mode = DebugMode.Connect
-debugpy.connect_with_timeout(host, port, debugpy_timeout) # use instead of debugpy.connect
+debugpy_connect_with_timeout(host, port, debugpy_timeout) # use instead of debugpy.connect
 # if debug_mode = DebugMode.WaitForConnection, we are going to listen instead
 # debugpy.listen((host, port))
 # if debug_mode = DebugMode.WaitForConnection, you can start DebugRelay on multiple ports (ports parameter is a list)
@@ -211,11 +211,11 @@ debug_relay.close()
 * `host` - Local hostname or ip address the debugger starts on, `127.0.0.1` by default
 * `port` - debugging port, `5678` by default
 
-> We extended **debugpy** with `connect_with_timeout` method.
-It accepts `connect_timeout_seconds` parameter - a timeout for `debugpy.connect()`.
+> We added `debugpy_connect_with_timeout` method on top of **debugpy.connect()**.
+It accepts `connect_timeout_seconds` parameter - how long it should wait for `debugpy.connect()` to connect.
 If the connection is not successfully made within the timeout,
 the debugging session aborts, and that can be handled in your code:
-`debugpy.connect_with_timeout()` returns `True` if the connection was successful, and `False` otherwise.
+`debugpy_connect_with_timeout()` returns `True` if the connection was successful, and `False` otherwise.
 
 Notice that DebugRelay accepts multiple ports to work with (**`ports` parameter is a list**).
 That's because Azure Relay Bridge support forwarding on multiple ports.
@@ -281,7 +281,7 @@ Then you combine them in `.vscode/launch.json` to as a compound:
 ```
 
 Remotely, each node you debug should be aware of the port number it should use.
-That port number must be passed to `DebugRelay` object and `debugpy.connect_with_timeout()`.
+That port number must be passed to `DebugRelay` object and `debugpy_connect_with_timeout()`.
 
 ## Troubleshooting
 
