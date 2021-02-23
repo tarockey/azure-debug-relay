@@ -4,6 +4,7 @@ azrelay.json
 
 # AML config
 config.json
+node_modules/
 
 # VS Code settings, secrets may be here
 .vscode/settings.json

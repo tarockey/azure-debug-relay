@@ -68,7 +68,7 @@ def create_and_publish_pipeline() -> any:
             'argparse==1.4.0',
             'azureml-core==1.22.0',
             'debugpy==1.2.1',
-            'azure-debug-relay'
+            'azure-debug-relay==0.2.0'
         ])
     batch_env = Environment(name="train-env")
     batch_env.docker.enabled = True
@@ -83,7 +83,7 @@ def create_and_publish_pipeline() -> any:
     tf_env.name = "traintf"
     tf_env.python.conda_dependencies.add_pip_package('argparse==1.4.0')
     tf_env.python.conda_dependencies.add_pip_package('debugpy==1.2.1')
-    tf_env.python.conda_dependencies.add_pip_package('azure-debug-relay')
+    tf_env.python.conda_dependencies.add_pip_package('azure-debug-relay==0.2.0')
     
     print("Create pipeline steps")
     steps = get_pipeline(
@@ -173,7 +173,7 @@ def get_pipeline(aml_compute: ComputeTarget, blob_ds: Datastore, batch_env: Envi
 
     src = ScriptRunConfig(
         source_directory=".",
-        script="samples/azure_ml_advanced/steps/mpi_step.py",
+        script="samples/azure_ml_advanced/steps/mpi/mpi_step_starter.py",
         arguments=[
             "--input-ds", pipeline_files,
             "--is-debug", is_debug,
@@ -188,7 +188,7 @@ def get_pipeline(aml_compute: ComputeTarget, blob_ds: Datastore, batch_env: Envi
 
     mpi_step = PythonScriptStep(
         name="mpi-step",
-        script_name="samples/azure_ml_advanced/steps/mpi_step.py",
+        script_name="samples/azure_ml_advanced/steps/mpi/mpi_step_starter.py",
         arguments=[
             "--input-ds", pipeline_files,
             "--is-debug", is_debug,
@@ -203,13 +203,13 @@ def get_pipeline(aml_compute: ComputeTarget, blob_ds: Datastore, batch_env: Envi
         source_directory="."
     )
 
-    mpi_step.run_after(parallelrun_step)
+    # mpi_step.run_after(parallelrun_step)
 
     print("Pipeline Steps Created")
 
     steps = [
-        single_step,
-        parallelrun_step,
+        #single_step,
+        #parallelrun_step,
         mpi_step
     ]
 

@@ -17,7 +17,7 @@ def main():
 
     is_debug = args.is_debug
 
-    if is_debug == 'True':
+    if is_debug.lower() == 'true':
         print("Let's start debugging")
         start_remote_debugging_from_args()
         debugpy.breakpoint()

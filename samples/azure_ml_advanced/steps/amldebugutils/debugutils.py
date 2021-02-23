@@ -30,7 +30,7 @@ def start_remote_debugging(
 
     debug_relay = DebugRelay(
         connection_string, relay_connection_name, debug_mode, hybrid_connection_url, host, port)
-    debug_relay.open(wait_for_connection=False)
+    debug_relay.open()
     if debug_relay.is_running():
         print(f"Starting debugpy session on {host}:{port}. " +
               "If it's stuck here, make sure your VS Code starts listening before this step starts.")
@@ -55,7 +55,7 @@ def start_remote_debugging_from_args(ignore_debug_flag: bool = False) -> bool:
                         type=str, required=True)
     options, _ = parser.parse_known_args()
 
-    if not options.is_debug == 'True' and not ignore_debug_flag:
+    if not options.is_debug.lower() == 'true' and not ignore_debug_flag:
         return False
 
     if options.debug_relay_connection_string_secret == "" or options.debug_relay_connection_name == "":

@@ -30,6 +30,18 @@
             "console": "integratedTerminal"
         },
         {
+          "name": "Python: Deploy Azure ML Advanced",
+          "type": "python",
+          "request": "launch",
+          "program": "${workspaceFolder}/samples/azure_ml_advanced/remote_pipeline_demo.py",
+          "args": [
+            "--is-debug", "true",
+            "--debug-relay-connection-name", "${input:hybridConnName}"
+          ],
+          "cwd": "${workspaceFolder}",
+          "console": "integratedTerminal"
+        },
+        {
             "name": "Python: Listen 5678",
             "type": "python",
             "request": "attach",
@@ -44,5 +56,12 @@
                 }
             ]
         }
+    ],
+    "inputs": [
+      {
+        "id": "hybridConnName",
+        "type": "promptString",
+        "description": "Enter Hybrid Connection Name"
+      }
     ]
 }

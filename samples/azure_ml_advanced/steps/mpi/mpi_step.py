@@ -16,6 +16,10 @@ hvd.init()
 # K.set_session(tf.Session(config=config))
 
 
+def train():
+    print("Here I train!")
+
+
 def main():
 
     print("Parsing parameters")
@@ -29,10 +33,13 @@ def main():
     print("Horovod size:", hvd.size())
     print("Horovod rank:", hvd.rank())
 
-    if args.is_debug == 'True' and hvd.rank() == 0:
+    if args.is_debug.lower() == 'true' and hvd.rank() == 0:
         print("Let's start debugging")
-        start_remote_debugging_from_args()
-        debugpy.breakpoint()
+        if start_remote_debugging_from_args():
+            debugpy.breakpoint()
+            # the breakpoint will hit on train() call below
+
+    train()
 
 
 if __name__ == "__main__":
