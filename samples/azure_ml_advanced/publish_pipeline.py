@@ -14,7 +14,7 @@ from azureml.core.runconfig import Environment, CondaDependencies
 from azureml.pipeline.core import Pipeline, PublishedPipeline, PipelineData
 from azureml.core import RunConfiguration
 from azureml.pipeline.core import PipelineParameter
-from azureml.pipeline.steps import PythonScriptStep, MpiStep
+from azureml.pipeline.steps import PythonScriptStep
 from azureml.pipeline.steps import ParallelRunStep, ParallelRunConfig
 from dotenv import load_dotenv
 from azureml.core import ScriptRunConfig
