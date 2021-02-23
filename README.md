@@ -183,13 +183,15 @@ relay_connection_name = "HYBRID CONNECTION NAME" # your Hybrid Connection name
 debug_mode = DebugMode.Connect # or DebugMode.WaitForConnection if connecting from another end
 hybrid_connection_url = "HYBRID CONNECTION URL" # can be None if access_key_or_connection_string is a connection string
 host = "127.0.0.1" # local hostname or ip address the debugger starts on
-ports = ["5678"] # any available ports that you can use within your machine
+port = 5678
+ports = [str(port)] # any available ports that you can use within your machine
+debugpy_timeout = 15 # 15 seconds for debugpy to connect
 
 debug_relay = DebugRelay(access_key_or_connection_string, relay_connection_name, debug_mode, hybrid_connection_url, host, ports)
 debug_relay.open()
 
 # attach to a remote debugger (usually from remote server code) with debug_mode = DebugMode.Connect
-debugpy.connect_with_timeout((host, port)) # use instead of debugpy.connect
+debugpy.connect_with_timeout(host, port, debugpy_timeout) # use instead of debugpy.connect
 # if debug_mode = DebugMode.WaitForConnection, we are going to listen instead
 # debugpy.listen((host, port))
 # if debug_mode = DebugMode.WaitForConnection, you can start DebugRelay on multiple ports (ports parameter is a list)

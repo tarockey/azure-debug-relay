@@ -84,7 +84,7 @@ def _check_for_debugging(args) -> DebugRelay:
         if debug_relay.is_running():
             print("Connecting to the remote host...")
             if options.debug == "attach":
-                debugpy.connect_with_timeout(("127.0.0.1", 5678))
+                debugpy.connect_with_timeout("127.0.0.1", 5678)
             else:
                 debugpy.listen(("127.0.0.1", 5678))
                 debugpy.wait_for_client()

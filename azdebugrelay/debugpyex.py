@@ -27,10 +27,9 @@ class DebugPyEx():
 
 
     @staticmethod
-    def connect(address, connect_timeout_seconds: float = _DEFAULT_CONNECT_TIMEOUT) -> bool:
+    def connect(host, port, connect_timeout_seconds: float = _DEFAULT_CONNECT_TIMEOUT) -> bool:
         with DebugPyEx._connect_lock:
             DebugPyEx._debugpy_connected = False
-            host, port = address
             thread = StoppableThread(target=DebugPyEx._thread_connect_proc, args=(
                 host, port,), daemon=True)
             thread.start()
