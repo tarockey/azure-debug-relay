@@ -183,11 +183,10 @@ relay_connection_name = "HYBRID CONNECTION NAME" # your Hybrid Connection name
 debug_mode = DebugMode.Connect # or DebugMode.WaitForConnection if connecting from another end
 hybrid_connection_url = "HYBRID CONNECTION URL" # can be None if access_key_or_connection_string is a connection string
 host = "127.0.0.1" # local hostname or ip address the debugger starts on
-port = 5678
-ports = [str(port)] # any available ports that you can use within your machine
+port = 5678 # any available port that you can use within your machine, may be a list of multiple ports
 debugpy_timeout = 15 # 15 seconds for debugpy to connect
 
-debug_relay = DebugRelay(access_key_or_connection_string, relay_connection_name, debug_mode, hybrid_connection_url, host, ports)
+debug_relay = DebugRelay(access_key_or_connection_string, relay_connection_name, debug_mode, hybrid_connection_url, host, port)
 debug_relay.open()
 
 # attach to a remote debugger (usually from remote server code) with debug_mode = DebugMode.Connect
@@ -271,10 +270,11 @@ Then you combine them in `.vscode/launch.json` to as a compound:
 ```json
 "compounds": [
   {
-    "name": "Python: AML Advanced 2 Listeners",
+    "name": "Python: AML Advanced 3 Listeners",
     "configurations": [
       "Python: Listen 5678", 
-      "Python: Listen 5679"
+      "Python: Listen 5679",
+      "Python: Listen 5680"
     ]
   }
 ]

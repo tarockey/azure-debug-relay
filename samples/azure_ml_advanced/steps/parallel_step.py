@@ -1,18 +1,19 @@
 import os
 import argparse
 import debugpy
-from samples.azure_ml_advanced.steps.amldebugutils import *
+from samples.azure_ml_advanced.steps.amldebugutils import start_remote_debugging_from_args
 
 
 def init():
     global is_debug
 
     parser = argparse.ArgumentParser(description="Parallel Step parameters")
-    parser.add_argument('--is-debug', required=False, type=bool, default=False)
+    parser.add_argument('--is-debug', required=True, type=str)
     args, _ = parser.parse_known_args()
 
+    is_debug = False
     # debug mode and on the master node
-    if args.is_debug and bool(os.environ.get('AZ_BATCH_IS_CURRENT_NODE_MASTER')):
+    if args.is_debug.lower() == 'true' and bool(os.environ.get('AZ_BATCH_IS_CURRENT_NODE_MASTER')):
         is_debug = True
         print("This is a mater node. Start a debugging session.")
         start_remote_debugging_from_args()

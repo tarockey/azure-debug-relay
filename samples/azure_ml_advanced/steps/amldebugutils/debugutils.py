@@ -29,7 +29,7 @@ def start_remote_debugging(
     port = debug_port
 
     debug_relay = DebugRelay(
-        connection_string, relay_connection_name, debug_mode, hybrid_connection_url, host, [str(port)])
+        connection_string, relay_connection_name, debug_mode, hybrid_connection_url, host, port)
     debug_relay.open()
     if debug_relay.is_running():
         print(f"Starting debugpy session on {host}:{port} with timeout {debugpy_connect_timeout} seconds.")
@@ -48,7 +48,7 @@ def start_remote_debugging(
 
 def start_remote_debugging_from_args(ignore_debug_flag: bool = False) -> bool:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--is-debug", type=bool, required=False, default=False)
+    parser.add_argument("--is-debug", type=str, required=True)
     parser.add_argument("--debug-relay-connection-name",
                         type=str, required=True)
     parser.add_argument('--debug-port', action='store', type=int,
@@ -57,10 +57,12 @@ def start_remote_debugging_from_args(ignore_debug_flag: bool = False) -> bool:
                         type=str, required=True)
     options, _ = parser.parse_known_args()
 
-    if not options.is_debug and not ignore_debug_flag:
+    if not options.is_debug.lower() == "true" and not ignore_debug_flag:
         return False
 
-    if options.debug_relay_connection_string_secret == "" or options.debug_relay_connection_name == "":
+    if options.debug_relay_connection_string_secret == ""\
+            or options.debug_relay_connection_name == ""\
+            or options.debug_relay_connection_name.lower() == "none":
         err_msg = "Azure Relay connection string secret name or hybrid connection name is empty."
         logging.fatal(err_msg)
         raise ValueError(err_msg)

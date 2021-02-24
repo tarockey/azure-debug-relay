@@ -42,7 +42,7 @@ def _main():
         debugpy_timeout = 15
 
         debug_relay = DebugRelay(
-            connection_string, relay_connection_name, debug_mode, hybrid_connection_url, host, [str(port)])
+            connection_string, relay_connection_name, debug_mode, hybrid_connection_url, host, port)
         debug_relay.open()
         print(f"Starting debugpy session on {host}:{port}")
         if debugpy_connect_with_timeout(host, port, debugpy_timeout):

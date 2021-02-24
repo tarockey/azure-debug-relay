@@ -64,7 +64,7 @@ class DebugRelay(object):
                  debug_mode: DebugMode = DebugMode.WaitForConnection,
                  hybrid_connection_url: str = None,
                  host: str ="127.0.0.1",
-                 ports: typing.List[str] = ["5678"],
+                 ports: typing.Union[str, int, typing.List[str], typing.List[int]] = "5678",
                  az_relay_connection_wait_time: float = 60,
                  logger: logging.Logger = logging.root):
         """Initializes DebugRelay object. 
@@ -97,15 +97,22 @@ class DebugRelay(object):
                     "hybrid_connection_url must be specified when "\
                     "access_key_or_connection_string is not a connection string.")
 
+        if isinstance(ports, typing.List):
+            converted_ports = ports
+        elif isinstance(ports, str):
+            converted_ports = ports.strip().replace("," " ").split()
+        else:
+            converted_ports = [str(ports)]
+
         if have_connection_string:
             self.auth_option = f"-x \"{access_key_or_connection_string}\"" 
         else:
             self.auth_option = f"-E \"{hybrid_connection_url}\" -k \"{access_key_or_connection_string}\""
 
         if debug_mode == DebugMode.WaitForConnection:
-            self.connection_option = f"-R \"{relay_connection_name}:{host}:{';'.join(ports)}\""
+            self.connection_option = f"-R \"{relay_connection_name}:{host}:{';'.join(converted_ports)}\""
         else:
-            self.connection_option = f"-L \"{host}:{';'.join(ports)}:{relay_connection_name}\""
+            self.connection_option = f"-L \"{host}:{';'.join(converted_ports)}:{relay_connection_name}\""
 
         self.az_relay_connection_wait_time = az_relay_connection_wait_time
 
@@ -293,8 +300,8 @@ class DebugRelay(object):
     @staticmethod
     def from_config(config_file: str, 
                     debug_mode: DebugMode = DebugMode.WaitForConnection,
-                    host:str = "127.0.0.1",
-                    ports:typing.List[str] = ["5678"]) -> any:
+                    host: str = "127.0.0.1",
+                    ports: typing.Union[str, int, typing.List[str], typing.List[int]] = "5678") -> any:
         if os.path.exists(config_file):
             with open(config_file) as cfg_file:
                 config = json.load(cfg_file)
@@ -313,7 +320,7 @@ class DebugRelay(object):
     @staticmethod
     def from_environment(debug_mode: DebugMode = DebugMode.WaitForConnection,
                          host: str = "127.0.0.1",
-                         ports: typing.List[str] = ["5678"]) -> any:
+                         ports: typing.Union[str, int, typing.List[str], typing.List[int]] = "5678") -> any:
         relay_connection_name = os.environ.get("AZRELAY_CONNECTION_NAME")
         conn_str = os.environ.get("AZRELAY_CONNECTION_STRING")
         if not relay_connection_name or not conn_str:

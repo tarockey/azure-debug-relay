@@ -1,12 +1,14 @@
 # Debugging Advanced Azure Machine Learning Pipelines
 
-This sample demonstrates how to debug a pipeline with [ParallelRunStep](https://docs.microsoft.com/en-us/python/api/azureml-pipeline-steps/azureml.pipeline.steps.parallelrunstep?view=azure-ml-py).
+This sample demonstrates how to debug a pipeline with [ParallelRunStep](https://docs.microsoft.com/en-us/python/api/azureml-pipeline-steps/azureml.pipeline.steps.parallelrunstep?view=azure-ml-py) and with distributed Tensorflow steps using [MPI](https://docs.microsoft.com/en-us/python/api/azureml-core/azureml.core.runconfig.mpiconfiguration?view=azure-ml-py).
 
 With ParallelRunStep, to make sure we only debug it on a single node, we check that `AZ_BATCH_IS_CURRENT_NODE_MASTER` environment variable equals `true`.
 
-We debug each step using a separate port (5678 and 5679).
-VS Code *compound* configuration `Python: AML Advanced 2 Listeners` starts 2 listeners.
-With that, we can even debug 2 simultaneously running nodes,
+In Tensorflow MPI steps, `horovod.tensorflow.rank() == 0` does the same thing.
+
+We debug each step using a separate port (5678, 5679, 5680).
+VS Code *compound* configuration `Python: AML Advanced 3 Listeners` starts 3 listeners.
+With that, we can even debug 3 simultaneously running nodes,
 even though in this sample it is only a matter of convenience.
 
 ## Configuration
@@ -29,6 +31,6 @@ Create an environment (see `.env.sample`) or set the following environment varia
 
 ## How to run
 
-1. Start debugging with `Python: AML Advanced 2 Listeners` configuration.
+1. Start debugging with `Python: AML Advanced 3 Listeners` configuration.
 1. Run `python3 samples/azure_ml_advanced/remote_pipeline_demo.py --is-debug true --debug-relay-connection-name <hybrid-connection-name>`
 in terminal **on the same machine**. Here **hybrid-connection-name** is a name of Azure Relay Hybrid Connection which Azure Relay Shared Access Policy above has `Listen` and `Send` permissions on.
