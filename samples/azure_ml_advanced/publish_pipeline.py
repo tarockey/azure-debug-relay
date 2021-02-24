@@ -172,44 +172,6 @@ def get_pipeline(aml_compute: ComputeTarget, blob_ds: Datastore, batch_env: Envi
 
     src = ScriptRunConfig(
         source_directory=".",
-        script="samples/azure_ml_advanced/steps/mpi_step.py",
-        arguments=[
-            "--input-ds", pipeline_files,
-            "--is-debug", is_debug,
-            "--debug-relay-connection-name", relay_connection_name,
-            "--debug-port", 5680,
-            "--debug-relay-connection-string-secret", debug_connection_string_secret_name
-            ],
-        compute_target=compute_name,
-        environment=tf_env,
-        distributed_job_config=distr_config,
-    )
-
-    mpi_step = PythonScriptStep(
-        name="mpi-step",
-        script_name="samples/azure_ml_advanced/steps/mpi_step.py",
-        arguments=[
-            "--input-ds", pipeline_files,
-            "--is-debug", is_debug,
-            "--debug-relay-connection-name", relay_connection_name,
-            "--debug-port", 5680,
-            "--debug-relay-connection-string-secret", debug_connection_string_secret_name
-            ],
-        compute_target=aml_compute,
-        inputs=[pipeline_files],
-        outputs=[],
-        runconfig=src.run_config,
-        source_directory="."
-    )
-
-    mpi_step.run_after(parallelrun_step)
-
-    print("Pipeline Steps Created")
-
-    distr_config = MpiConfiguration(process_count_per_node=1, node_count=2)
-
-    src = ScriptRunConfig(
-        source_directory=".",
         script="samples/azure_ml_advanced/steps/mpi/mpi_step_starter.py",
         arguments=[
             "--input-ds", pipeline_files,
@@ -241,6 +203,8 @@ def get_pipeline(aml_compute: ComputeTarget, blob_ds: Datastore, batch_env: Envi
     )
 
     mpi_step.run_after(parallelrun_step)
+
+    print("Pipeline Steps Created")
 
     steps = [
         single_step,
