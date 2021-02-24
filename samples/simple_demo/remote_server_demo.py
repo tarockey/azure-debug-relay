@@ -1,10 +1,10 @@
 import os
 import sys
 import argparse
-import debugpy
 import platform
 import pathlib
 from signal import signal, SIGINT
+import debugpy
 
 ### This block is only for debugging from samples/simple_demo directory.
 ### You don't need it when have azdebugrelay module installed.
@@ -21,7 +21,7 @@ if _missing_azdebugrelay:
     sys.path.insert(0, _azdebugrelay_dir)
 ###############  
 
-from azdebugrelay import DebugRelay, DebugMode
+from azdebugrelay import DebugRelay, DebugMode, debugpy_connect_with_timeout
 g_debug_relay = None
 
 def do_work():
@@ -29,7 +29,7 @@ def do_work():
     """
     print("Hello world!")
     plat = platform.platform()
-    debugpy.breakpoint() # you can put a real VSCode breakpoint
+    debugpy.breakpoint()  # you can put a real VSCode breakpoint
     print(plat) # the debugger will stop here because debugpy.breakpoint() call above
 
 
@@ -72,7 +72,7 @@ def _check_for_debugging(args) -> DebugRelay:
             debug_relay = DebugRelay.from_environment(debug_mode=mode)
         
         # you can also create DebugRelay directly by providing connection string and the rest of its configuration:
-        # debug_relay = DebugRelay(access_key_or_connection_string, relay_connection_name, debug_mode, hybrid_connection_url, port)
+        # debug_relay = DebugRelay(access_key_or_connection_string, relay_connection_name, debug_mode, hybrid_connection_url, ports)
         
         if debug_relay is None:
             print("Cannot create Debug Relay due to missing configuration.")
@@ -84,7 +84,7 @@ def _check_for_debugging(args) -> DebugRelay:
         if debug_relay.is_running():
             print("Connecting to the remote host...")
             if options.debug == "attach":
-                debugpy.connect(("127.0.0.1", 5678))
+                debugpy_connect_with_timeout("127.0.0.1", 5678, 15)
             else:
                 debugpy.listen(("127.0.0.1", 5678))
                 debugpy.wait_for_client()

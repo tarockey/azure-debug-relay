@@ -2,7 +2,7 @@
     "name": "azure-debug-relay",
     "displayName": "Azure Debug Relay",
     "description": "Azure Debug Relay Debugger Extension for Python",
-    "version": "0.2.0",
+    "version": "0.3.8",
     "publisher": "VladKolesnikov-vladkol",
     "repository": "https://github.com/vladkol/azure-debug-relay",
     "engines": {
@@ -65,5 +65,8 @@
         "@typescript-eslint/parser": "^3.0.2",
         "eslint": "^7.1.0",
         "typescript": "^4.0.2"
+    },
+    "dependencies": {
+        "dotenv": "^8.2.0"
     }
 }

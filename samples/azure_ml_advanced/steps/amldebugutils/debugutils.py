@@ -1,15 +1,15 @@
 import argparse
 from copy import Error
 import logging
-import debugpy
 from azureml.core import Run
-from azdebugrelay import DebugRelay, DebugMode
+from azdebugrelay import DebugRelay, DebugMode, debugpy_connect_with_timeout
 
 
 def start_remote_debugging(
         debug_relay_connection_string_secret: str,
         debug_relay_connection_name:str,
-        debug_port,
+        debug_port: int,
+        debugpy_connect_timeout: float = 5
         ):
     # get connection string from the workspace Key Vault
     run = Run.get_context()
@@ -26,17 +26,19 @@ def start_remote_debugging(
     debug_mode = DebugMode.Connect
     hybrid_connection_url = None  # can keep it None because using a connection string
     host = "127.0.0.1"  # local hostname or ip address the debugger starts on
-    port = int(debug_port)
+    port = debug_port
 
     debug_relay = DebugRelay(
         connection_string, relay_connection_name, debug_mode, hybrid_connection_url, host, port)
-    debug_relay.open(wait_for_connection=False)
+    debug_relay.open()
     if debug_relay.is_running():
-        print(f"Starting debugpy session on {host}:{port}. " +
-              "If it's stuck here, make sure your VS Code starts listening before this step starts.")
-        debugpy.connect((host, port))
-        print(f"Debugpy is connected!")
-        return True
+        print(f"Starting debugpy session on {host}:{port} with timeout {debugpy_connect_timeout} seconds.")
+        if debugpy_connect_with_timeout(host, port, connect_timeout_seconds=debugpy_connect_timeout):
+            print(f"Debugpy is connected!")
+            return True
+        else:
+            print(f"Could not connect to the debugger!")
+            return False
     else:
         err_msg = "Cannot connect to a remote debugger"
         print(err_msg)
@@ -55,11 +57,13 @@ def start_remote_debugging_from_args(ignore_debug_flag: bool = False) -> bool:
                         type=str, required=True)
     options, _ = parser.parse_known_args()
 
-    if not options.is_debug == 'True' and not ignore_debug_flag:
+    if not options.is_debug.lower() == "true" and not ignore_debug_flag:
         return False
 
-    if options.debug_relay_connection_string_secret == "" or options.debug_relay_connection_name == "":
-        err_msg = "Azure Relay connection string secret name or connection name is empty."
+    if options.debug_relay_connection_string_secret == ""\
+            or options.debug_relay_connection_name == ""\
+            or options.debug_relay_connection_name.lower() == "none":
+        err_msg = "Azure Relay connection string secret name or hybrid connection name is empty."
         logging.fatal(err_msg)
         raise ValueError(err_msg)
 

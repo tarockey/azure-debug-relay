@@ -2,7 +2,7 @@ import argparse
 import logging
 import debugpy
 from azureml.core import Run
-from azdebugrelay import DebugRelay, DebugMode
+from azdebugrelay import DebugRelay, DebugMode, debugpy_connect_with_timeout
 
 
 def _main():
@@ -39,13 +39,16 @@ def _main():
         hybrid_connection_url = None # can keep it None because using a connection string
         host = "127.0.0.1"  # local hostname or ip address the debugger starts on
         port = options.debug_port
+        debugpy_timeout = 15
 
         debug_relay = DebugRelay(
             connection_string, relay_connection_name, debug_mode, hybrid_connection_url, host, port)
-        debug_relay.open(wait_for_connection=False)
+        debug_relay.open()
         print(f"Starting debugpy session on {host}:{port}")
-        debugpy.connect((host, port))
-        print(f"Debugpy is connected!")
+        if debugpy_connect_with_timeout(host, port, debugpy_timeout):
+            print("Debugpy is connected!")
+        else:
+            print("Debugpy could not connect!")
 
     train_job(debug=debug)
 

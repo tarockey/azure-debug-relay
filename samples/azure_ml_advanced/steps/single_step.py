@@ -2,7 +2,7 @@
 import argparse
 import os
 import debugpy
-from samples.azure_ml_advanced.steps.amldebugutils import *
+from samples.azure_ml_advanced.steps.amldebugutils import start_remote_debugging_from_args
 
 
 def main():
@@ -15,12 +15,13 @@ def main():
 
     print(f"Output folder {args.pipeline_files}")
 
-    is_debug = args.is_debug
-
-    if is_debug == 'True':
+    if args.is_debug.lower() == 'true':
         print("Let's start debugging")
-        start_remote_debugging_from_args()
-        debugpy.breakpoint()
+        if start_remote_debugging_from_args():
+            debugpy.breakpoint()
+            print("We are debugging!")
+        else:
+            print("Could not connect to a debugger!")
 
     os.makedirs("pipeline_files", exist_ok=True)
 

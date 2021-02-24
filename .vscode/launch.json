@@ -1,48 +1,100 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+  {
+    "name": "Run Extension",
+    "type": "extensionHost",
+    "request": "launch",
+    "runtimeExecutable": "${execPath}",
+    "args": ["--extensionDevelopmentPath=${workspaceFolder}"],
+    "outFiles": ["${workspaceFolder}/out/**/*.js"],
+    "preLaunchTask": "npm: watch"
+  },
+  {
+    "name": "Python: Simple Server Example",
+    "type": "python",
+    "request": "launch",
+    "program": "${workspaceFolder}/samples/simple_demo/remote_server_demo.py",
+    "args": ["--debug", "attach"],
+    "cwd": "${workspaceFolder}",
+    "console": "integratedTerminal"
+  },
+  {
+    "name": "Python: Listen 5678",
+    "type": "python",
+    "request": "attach",
+    "listen": {
+        "host": "127.0.0.1",
+        "port": 5678
+    },
+    "pathMappings": [
         {
-            "name": "Run Extension",
-            "type": "extensionHost",
-            "request": "launch",
-            "runtimeExecutable": "${execPath}",
-            "args": [
-                "--extensionDevelopmentPath=${workspaceFolder}"
-            ],
-            "outFiles": [
-                "${workspaceFolder}/out/**/*.js"
-            ],
-            "preLaunchTask": "npm: watch"
-        },
-        {
-            "name": "Python: Simple Server Example",
-            "type": "python",
-            "request": "launch",
-            "program": "${workspaceFolder}/samples/simple_demo/remote_server_demo.py",
-            "args": [
-                "--debug",
-                "attach"
-            ],
-            "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "Python: Listen 5678",
-            "type": "python",
-            "request": "attach",
-            "listen": {
-                "host": "127.0.0.1",
-                "port": 5678
-            },
-            "pathMappings": [
-                {
-                    "localRoot": "${workspaceFolder}",
-                    "remoteRoot": "."
-                }
-            ]
+            "localRoot": "${workspaceFolder}",
+            "remoteRoot": "."
         }
     ]
+  },
+  {
+      "name": "Python: Listen 5679",
+      "type": "python",
+      "request": "attach",
+      "listen": {
+          "host": "127.0.0.1",
+          "port": 5679
+      },
+      "pathMappings": [
+          {
+              "localRoot": "${workspaceFolder}",
+              "remoteRoot": "."
+          }
+      ]
+  },
+  {
+    "name": "Python: Listen 5680",
+    "type": "python",
+    "request": "attach",
+    "listen": {
+      "host": "127.0.0.1",
+      "port": 5680
+    },
+    "pathMappings": [
+      {
+        "localRoot": "${workspaceFolder}",
+        "remoteRoot": "."
+      }
+    ]
+  },
+  {
+    "name": "Python: Deploy Azure ML Advanced",
+    "type": "python",
+    "request": "launch",
+    "program": "${workspaceFolder}/samples/azure_ml_advanced/remote_pipeline_demo.py",
+    "args": [
+      "--is-debug", "true",
+      "--debug-relay-connection-name", "${input:hybridConnName}"
+    ],
+    "cwd": "${workspaceFolder}",
+    "console": "integratedTerminal"
+  }
+  ],
+  "inputs": [
+    {
+      "id": "hybridConnName",
+      "type": "promptString",
+      "description": "Enter Hybrid Connection Name"
+    }
+  ],
+  "compounds": [
+        {
+          "name": "Python: AML Advanced 3 Listeners",
+          "configurations": [
+            "Python: Listen 5678", 
+            "Python: Listen 5679",
+            "Python: Listen 5680"
+          ]
+        }
+      ]
 }

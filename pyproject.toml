@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "azure-debug-relay"
-version = "0.2.0"
+version = "0.3.8"
 description = "Cross-network remote debugging for Python"
 authors = ["Vlad Kolesnikov"]
 readme = "README.md"
@@ -13,7 +13,7 @@ include = [
 
 [tool.poetry.dependencies]
 python = "^3.6"
-azure-storage-blob = "^1.2"
+debugpy = { version = "^1.2.1" }
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.1"

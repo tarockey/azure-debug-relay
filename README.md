@@ -169,11 +169,6 @@ When debugging `remote_server_demo.py`, the debugger maps `./samples/simple_demo
 
 If everything works as it's supposed to, you will hit a breakpoint in your local Visual Studio Code.
 
-> Due to [a limitation we are trying to overcome](https://github.com/vladkol/azure-debug-relay/issues/11),
-if a local debugger is not listening by the time Azure Debug Relay starts on a remote server,
-the debugging session will not be established, and remote code will be stuck in `debugpy.connect`.
-The workaround is to restart the remote process and try again.
-
 ## Azure Debug Relay Python API
 
 `remote_server_demo.py` shows how you can use Azure Debug Relay (azure-debug-relay package) with your code.
@@ -181,20 +176,25 @@ The workaround is to restart the remote process and try again.
 **azdebugrelay** module contains DebugRelay class that install and launches Azure Relay Bridge:
 
 ```python
-from azdebugrelay import DebugRelay, DebugMode
+from azdebugrelay import DebugRelay, DebugMode, debugpy_connect_with_timeout
 
 access_key_or_connection_string = "AZURE RELAY HYBRID CONNECTION STRING OR ACCESS KEY"
 relay_connection_name = "HYBRID CONNECTION NAME" # your Hybrid Connection name
 debug_mode = DebugMode.Connect # or DebugMode.WaitForConnection if connecting from another end
 hybrid_connection_url = "HYBRID CONNECTION URL" # can be None if access_key_or_connection_string is a connection string
 host = "127.0.0.1" # local hostname or ip address the debugger starts on
-port = 5678 # any available port that you can use within your machine
+port = 5678 # any available port that you can use within your machine, may be a list of multiple ports
+debugpy_timeout = 15 # 15 seconds for debugpy to connect
 
 debug_relay = DebugRelay(access_key_or_connection_string, relay_connection_name, debug_mode, hybrid_connection_url, host, port)
 debug_relay.open()
 
 # attach to a remote debugger (usually from remote server code) with debug_mode = DebugMode.Connect
-debugpy.connect((host, port))
+debugpy_connect_with_timeout(host, port, debugpy_timeout) # use instead of debugpy.connect
+# if debug_mode = DebugMode.WaitForConnection, we are going to listen instead
+# debugpy.listen((host, port))
+# if debug_mode = DebugMode.WaitForConnection, you can start DebugRelay on multiple ports (ports parameter is a list)
+# debugpy.listen must be called with each of these ports
 
 # Debug, debug, debug
 # ...
@@ -209,6 +209,17 @@ debug_relay.close()
 * `hybrid_connection_url` - Hybrid Connection URL. Required when access_key_or_connection_string as an access key, otherwise is ignored and may be None.
 * `host` - Local hostname or ip address the debugger starts on, `127.0.0.1` by default
 * `port` - debugging port, `5678` by default
+
+> We added `debugpy_connect_with_timeout` method on top of **debugpy.connect()**.
+It accepts `connect_timeout_seconds` parameter - how long it should wait for `debugpy.connect()` to connect.
+If the connection is not successfully made within the timeout,
+the debugging session aborts, and that can be handled in your code:
+`debugpy_connect_with_timeout()` returns `True` if the connection was successful, and `False` otherwise.
+
+Notice that DebugRelay accepts multiple ports to work with (**`ports` parameter is a list**).
+That's because Azure Relay Bridge support forwarding on multiple ports.
+This feature is primarily used by DebugRelay internally
+for [Simultaneous distributed debugging](#simultaneous-distributed-debugging).
 
 ### Azure Machine Learning samples
 
@@ -225,18 +236,52 @@ Look at the [sample's readme file](samples/azure_ml_simple/README.md).
 
 Look at the [advanced sample's readme file](samples/azure_ml_advanced/README.md).
 
-## Debugging across multiple servers at the same time
+## Simultaneous distributed debugging
 
-This is an advanced scenario that [we are currently working on](https://github.com/vladkol/azure-debug-relay/issues/10).
-While it is possible technically with Azure Relay Bridge and [compound configurations](https://code.visualstudio.com/docs/editor/debugging#_compound-launch-configurations) in Visual Studio code, making that work seamlessly is not straightforward.
+You can debug multiple simultaneously running remote nodes using different ports.
+Each execution flow you want to debug must use a separate port - both locally and remotely.
 
-As a *workaround* (not a perfect one), make multiple copies of your code,
-open it in multiple VS Code windows,
-and start multiple debugging sessions **each on a different Hybrid Connection and a different port**.
+In Visual Studio code, it is achievable via so called "[compound launch configurations](https://code.visualstudio.com/docs/editor/debugging#_compound-launch-configurations)".
+Compound launch configurations combine multiple launch configurations, and therefore start them at the same time.
 
-Please note that multiple Hybrid Connections and therefore configurations (AZRELAY_CONNECTION_NAME, etc.) are required.
+Each launch configuration must be a Python `listen` configuration with a unique name and port:
 
-Because you will have multiple VS Code listeners on the same machine, each needs to be on a different port (like we have now on `5678`). Same applies to remote servers - each remote machine must use a unique debugging port.
+```json
+{
+  "name": "Python: Listen 5678",
+  "type": "python",
+  "request": "attach",
+  "listen": {
+      "host": "127.0.0.1",
+      "port": 5678
+  },
+  "pathMappings": [
+      {
+          "localRoot": "${workspaceFolder}",
+          "remoteRoot": "."
+      }
+  ]
+}
+```
+
+You need as many launch configurations as number of simultaneous execution flows or nodes you'd like to debug.
+Then you combine them in `.vscode/launch.json` to as a compound:
+
+```json
+"compounds": [
+  {
+    "name": "Python: AML Advanced 3 Listeners",
+    "configurations": [
+      "Python: Listen 5678", 
+      "Python: Listen 5679",
+      "Python: Listen 5680"
+    ]
+  }
+]
+```
+
+Remotely, each node you debug should be aware of the port number it should use.
+That port number must be passed to `DebugRelay` object and `debugpy_connect_with_timeout()`.
 
 ## Troubleshooting
 

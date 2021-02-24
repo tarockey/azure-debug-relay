@@ -68,12 +68,11 @@ def create_and_publish_pipeline() -> any:
             'argparse==1.4.0',
             'azureml-core==1.22.0',
             'debugpy==1.2.1',
-            'azure-debug-relay'
+            'azure-debug-relay==0.3.8'
         ])
     batch_env = Environment(name="train-env")
     batch_env.docker.enabled = True
     batch_env.python.conda_dependencies = batch_conda_deps
-
 
     curated_env_name = 'AzureML-TensorFlow-2.2-CPU'
     tf_env = Environment.get(workspace=aml_workspace, name=curated_env_name)
@@ -83,8 +82,9 @@ def create_and_publish_pipeline() -> any:
     tf_env.name = "traintf"
     tf_env.python.conda_dependencies.add_pip_package('argparse==1.4.0')
     tf_env.python.conda_dependencies.add_pip_package('debugpy==1.2.1')
-    tf_env.python.conda_dependencies.add_pip_package('azure-debug-relay')
-    
+    tf_env.python.conda_dependencies.add_pip_package(
+        'azure-debug-relay==0.3.8')
+
     print("Create pipeline steps")
     steps = get_pipeline(
         aml_compute, aml_workspace.get_default_datastore(), batch_env, tf_env)
@@ -115,7 +115,6 @@ def get_pipeline(aml_compute: ComputeTarget, blob_ds: Datastore, batch_env: Envi
 
     # Pipeline parameters to use with every run
     is_debug = PipelineParameter("is_debug", default_value=False)
-    debug_port = PipelineParameter("debug_port", default_value=5678)
     relay_connection_name = PipelineParameter(
         "debug_relay_connection_name", default_value="none")
 
@@ -130,7 +129,7 @@ def get_pipeline(aml_compute: ComputeTarget, blob_ds: Datastore, batch_env: Envi
             "--pipeline-files", pipeline_files,
             "--is-debug", is_debug,
             "--debug-relay-connection-name", relay_connection_name,
-            "--debug-port", debug_port,
+            "--debug-port", 5678,
             "--debug-relay-connection-string-secret", debug_connection_string_secret_name
         ],
         inputs=[],
@@ -161,7 +160,7 @@ def get_pipeline(aml_compute: ComputeTarget, blob_ds: Datastore, batch_env: Envi
         arguments=[
             "--is-debug", is_debug,
             "--debug-relay-connection-name", relay_connection_name,
-            "--debug-port", debug_port,
+            "--debug-port", 5679,
             "--debug-relay-connection-string-secret", debug_connection_string_secret_name
         ],
         allow_reuse=False
@@ -173,14 +172,14 @@ def get_pipeline(aml_compute: ComputeTarget, blob_ds: Datastore, batch_env: Envi
 
     src = ScriptRunConfig(
         source_directory=".",
-        script="samples/azure_ml_advanced/steps/mpi_step.py",
+        script="samples/azure_ml_advanced/steps/mpi/mpi_step_starter.py",
         arguments=[
             "--input-ds", pipeline_files,
             "--is-debug", is_debug,
             "--debug-relay-connection-name", relay_connection_name,
-            "--debug-port", debug_port,
+            "--debug-port", 5680,
             "--debug-relay-connection-string-secret", debug_connection_string_secret_name
-            ],
+        ],
         compute_target=compute_name,
         environment=tf_env,
         distributed_job_config=distr_config,
@@ -188,14 +187,14 @@ def get_pipeline(aml_compute: ComputeTarget, blob_ds: Datastore, batch_env: Envi
 
     mpi_step = PythonScriptStep(
         name="mpi-step",
-        script_name="samples/azure_ml_advanced/steps/mpi_step.py",
+        script_name="samples/azure_ml_advanced/steps/mpi/mpi_step_starter.py",
         arguments=[
             "--input-ds", pipeline_files,
             "--is-debug", is_debug,
             "--debug-relay-connection-name", relay_connection_name,
-            "--debug-port", debug_port,
+            "--debug-port", 5680,
             "--debug-relay-connection-string-secret", debug_connection_string_secret_name
-            ],
+        ],
         compute_target=aml_compute,
         inputs=[pipeline_files],
         outputs=[],

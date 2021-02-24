@@ -3,6 +3,7 @@
 .vscode
 azrelay.json
 .azrelay.json
+node_modules/
 *
 */**
 !out/extension.js

@@ -89,8 +89,8 @@ run_config = RunConfiguration()
 conda_dependencies = run_config.environment.python.conda_dependencies
 conda_dependencies.add_conda_package("pip")
 conda_dependencies.add_pip_package("azureml-sdk==" + amlcore.__version__)
-conda_dependencies.add_pip_package("debugpy")
-conda_dependencies.add_pip_package("azure-debug-relay")
+conda_dependencies.add_pip_package("debugpy==1.2.1")
+conda_dependencies.add_pip_package("azure-debug-relay==0.3.8")
 
 train_step = PythonScriptStep(name='Train Step with Debugging',
                               script_name="samples/azure_ml_simple/steps/train.py",
