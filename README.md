@@ -1,14 +1,15 @@
 # Azure Debug Relay for Python
 
-Azure Debug Relay - is a [Visual Studio Code](https://code.visualstudio.com/) extension and a Python package for distributed remote debugging.
+Azure Debug Relay - is a [Visual Studio Code](https://code.visualstudio.com/) extension and a Python package for distributed remote debugging. It solves a problem of debugging code in real development and production environments,
+simultaneously across multiple nodes and in different networks.
 
 * [Azure Debug Relay extension](https://marketplace.visualstudio.com/items?itemName=VladKolesnikov-vladkol.azure-debug-relay) on Visual Studio Marketplace
 * [azure-debug-relay](https://pypi.org/project/azure-debug-relay/) package on PyPI
 
 Azure Debug Relay uses [debugpy](https://github.com/microsoft/debugpy) and [Azure Relay](https://docs.microsoft.com/en-us/azure/azure-relay/relay-what-is-it) service to create a debugging tunnel between 2 machines:
 
-1. You local Visual Studio Code debugger in `listen` mode.
-1. You remote code in `attach` mode.
+1. Your local Visual Studio Code debugger in `listen` mode.
+1. Your remote code in `attach` mode.
 
 Both machines can be isolated behind NAT or virtual networks - all they need is to be able to connect to Azure Relay resource.
 Azure Relay carries a secure tunnel, just as if these machines were in the same VPN.
@@ -50,9 +51,11 @@ Azure Relay Bridge tool is a .NET Core application, so you may need  to install 
 
 Before you start debugging with Azure Debug Relay, there are 3 places you configure it:
 
-1. Azure Portal.
-1. Local machine where you run Visual Studio Code and its Python debugger.
-1. Remote machine where you run the same code files that open locally in VS Code.
+1. **Azure Portal or CLI** where you create an Azure Relay resource and an Azure Hybrid Connection in it.
+1. **Local dev machine** where you run Visual Studio Code, its Python extension,
+and Azure Debug Relay extension with 2 configuration settings.
+1. **Remote machine** where you run the same code files that open locally in VS Code,
+with 2 lines that initiate debugging session for a certain request on an execution flow.
 
 ### In Azure Portal
 
