@@ -68,7 +68,7 @@ with 2 lines that initiate debugging session for a certain request on an executi
 
 #### **Azure CLI version**
 
-Choose your name instead of `mydebugrelay1` for an Azure Relay resource, and your custom name for Hybrid Connection instead of `debugrelayhc1`.
+Choose your name instead of `mydebugrelay1` for an Azure Relay resource, and your custom name for Hybrid Connection instead of `debugrelayhc1`. Same applies to `debugRelayResourceGroup` as resource group.
 
 ```cmd
 az group create --name debugRelayResourceGroup --location westus2

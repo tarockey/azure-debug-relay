@@ -4,12 +4,21 @@ This sample demonstrates how to debug a pipeline with [ParallelRunStep](https://
 
 With ParallelRunStep, to make sure we only debug it on a single node, we check that `AZ_BATCH_IS_CURRENT_NODE_MASTER` environment variable equals `true`.
 
-In Tensorflow MPI steps, `horovod.tensorflow.rank() == 0` does the same thing.
+With MPIConfiguration, it depends on the distributed training framework. Ultimately, you need identify an instance with **rank equal to zero*.
+[Look into this guide](https://azure.github.io/azureml-web/docs/cheatsheet/distributed-training/) to understand how to detect the rank.
+
+For example, in Horovod MPI Tensorflow steps in would be `horovod.tensorflow.rank()` which must be zero.
 
 We debug each step using a separate port (5678, 5679, 5680).
 VS Code *compound* configuration `Python: AML Advanced 3 Listeners` starts 3 listeners.
 With that, we can even debug 3 simultaneously running nodes,
 even though in this sample it is only a matter of convenience.
+
+If you need to debug a distributed step across multiple nodes or processes per node,
+you may need to add your own code for picking individual debugging ports for every instance of your training steps. Instead of passing port number as a parameter, steps can choose ports and "reserve" them by [adding an Azure ML Run property](https://docs.microsoft.com/en-us/azure/machine-learning/how-to-manage-runs?tabs=python#tag-and-find-runs) - if a property with a certain name was already added, the port has been utilized and therefore cannot be used.
+Multiple processes per node require first starting process to initialize a `DebugRelay` object with a list of ports to connect to.
+You may need to employ a shared data structure and a locking mechanism to make sure processes know when DebugRelay
+has been already initialized (checking for azrelay process also works).
 
 ## Configuration
 
