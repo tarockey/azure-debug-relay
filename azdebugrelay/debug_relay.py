@@ -482,7 +482,7 @@ def _cli_main(argv):
             Connection string of an Azure Relay Hybrid Connection
         --connection-name - optional, defaults to None
             Hybrid connection name. Required if --connection-string is specified.
-        --config_file - optional, defaults to None
+        --config-file - optional, defaults to None
             Configuration file path. Only used if connection_string is not specified.
     """
     parser = argparse.ArgumentParser()
