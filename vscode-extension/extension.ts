@@ -107,7 +107,7 @@ export function activate(context: vscode.ExtensionContext) {
     console.log('Azure Relay Bridge extension activated.');
 
     pythonPath = "python"
-    var pythonConfig = vscode.workspace.getConfiguration("python1")
+    var pythonConfig = vscode.workspace.getConfiguration("python")
     if (pythonConfig !== undefined){
         var pythonPathResult = pythonConfig.get("pythonPath")
         if (pythonPathResult !== undefined) {
