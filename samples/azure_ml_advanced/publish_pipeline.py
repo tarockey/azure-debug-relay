@@ -68,7 +68,7 @@ def create_and_publish_pipeline() -> any:
             'argparse==1.4.0',
             'azureml-core==1.22.0',
             'debugpy==1.2.1',
-            'azure-debug-relay==0.3.9'
+            'azure-debug-relay==0.4.0'
         ])
     batch_env = Environment(name="train-env")
     batch_env.docker.enabled = True
@@ -83,7 +83,7 @@ def create_and_publish_pipeline() -> any:
     tf_env.python.conda_dependencies.add_pip_package('argparse==1.4.0')
     tf_env.python.conda_dependencies.add_pip_package('debugpy==1.2.1')
     tf_env.python.conda_dependencies.add_pip_package(
-        'azure-debug-relay==0.3.9')
+        'azure-debug-relay==0.4.0')
 
     print("Create pipeline steps")
     steps = get_pipeline(
