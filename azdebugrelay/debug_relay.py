@@ -356,14 +356,13 @@ class DebugRelay(object):
 
         azrelay_folder = os.path.join(
             Path.home(), DebugRelay.relay_dir_name, DebugRelay.relay_version_name)
-        azrelay_parent = os.path.join(
-            Path.home(), DebugRelay.relay_dir_name)
-        azrelay_symlink = os.path.join(
-            azrelay_parent, DebugRelay.relay_app_name)
         relay_file = os.path.join(
             azrelay_folder, DebugRelay.relay_app_name)
         DebugRelay._relay_config_file = os.path.join(
             azrelay_folder, DebugRelay.relay_app_name) + ".yml"
+
+        if DebugRelay.is_windows:
+            relay_file += ".exe"
 
         exists = os.path.exists(azrelay_folder)
         if not exists:
@@ -384,13 +383,14 @@ class DebugRelay(object):
             ctx = ssl.create_default_context()
             ctx.check_hostname = False
             ctx.verify_mode = ssl.CERT_NONE
-
-            filestream = urllib.request.urlopen(download, context=ctx)
             
             if download.lower().endswith(".zip"):
-                with zipfile.ZipFile(filestream, 'r') as zip_ref:
+                zip_file, _ = urllib.request.urlretrieve(download)
+                with zipfile.ZipFile(zip_file, 'r') as zip_ref:
                     zip_ref.extractall(azrelay_folder)
+                os.remove(zip_file)
             else:
+                filestream = urllib.request.urlopen(download, context=ctx)
                 with tarfile.open(fileobj=filestream, mode="r|gz") as thetarfile:
                     thetarfile.extractall(azrelay_folder)
 
@@ -398,21 +398,14 @@ class DebugRelay(object):
                 st = os.stat(relay_file)
                 os.chmod(relay_file, st.st_mode | stat.S_IEXEC)
 
-        if not exists or not os.path.exists(azrelay_symlink):
-            tmp_link = f"{azrelay_symlink}.tmp"
-            os.symlink(relay_file, tmp_link)
-            os.replace(tmp_link, azrelay_symlink)
-            st = os.stat(azrelay_symlink)
-            os.chmod(azrelay_symlink, st.st_mode | stat.S_IEXEC)
-
         if not os.path.exists(DebugRelay._relay_config_file):
             with open(DebugRelay._relay_config_file, "a") as yml:
                 yml.write("ExitOnForwardFailure: true")
 
         existing_path_var = os.environ["PATH"]
         paths = existing_path_var.split(os.pathsep)
-        if azrelay_parent not in paths:
-            os.environ["PATH"] += os.pathsep + azrelay_parent
+        if azrelay_folder not in paths:
+            os.environ["PATH"] = azrelay_folder + os.pathsep + os.environ["PATH"]
 
 
 def _main(connect: bool, host: str, ports: typing.List[str] = ["5678"], connection_string: str = None, relay_connection_name: str = None, config_file: str = None):
@@ -482,7 +475,7 @@ def _cli_main(argv):
             Connection string of an Azure Relay Hybrid Connection
         --connection-name - optional, defaults to None
             Hybrid connection name. Required if --connection-string is specified.
-        --config-file - optional, defaults to None
+        --config_file - optional, defaults to None
             Configuration file path. Only used if connection_string is not specified.
     """
     parser = argparse.ArgumentParser()
@@ -520,6 +513,3 @@ def _cli_main(argv):
 # DebugRelays can work as a CLI tool.
 if __name__ == '__main__':
     _cli_main(sys.argv[1:])
-    
-    
-    
