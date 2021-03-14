@@ -100,7 +100,7 @@ class DebugRelay(object):
         if isinstance(ports, typing.List):
             converted_ports = ports
         elif isinstance(ports, str):
-            converted_ports = ports.strip().replace("," " ").split()
+            converted_ports = ports.strip().replace(",", " ").split()
         else:
             converted_ports = [str(ports)]
 
