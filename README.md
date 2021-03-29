@@ -1,12 +1,12 @@
-# Azure Debug Relay for Python
+# Azure Debugging Relay for Python
 
-Azure Debug Relay - is a [Visual Studio Code](https://code.visualstudio.com/) extension and a Python package for distributed remote debugging. It solves a problem of debugging code in real development and production environments,
+Azure Debugging Relay - is a [Visual Studio Code](https://code.visualstudio.com/) extension and a Python package for distributed remote debugging. It solves a problem of debugging code in real development and production environments,
 simultaneously across multiple nodes and in different networks.
 
-* [Azure Debug Relay extension](https://marketplace.visualstudio.com/items?itemName=VladKolesnikov-vladkol.azure-debug-relay) on Visual Studio Marketplace
+* [Azure Debugging Relay extension](https://marketplace.visualstudio.com/items?itemName=VladKolesnikov-vladkol.azure-debug-relay) on Visual Studio Marketplace
 * [azure-debug-relay](https://pypi.org/project/azure-debug-relay/) package on PyPI
 
-Azure Debug Relay uses [debugpy](https://github.com/microsoft/debugpy) and [Azure Relay](https://docs.microsoft.com/en-us/azure/azure-relay/relay-what-is-it) service to create a debugging tunnel between 2 machines:
+Azure Debugging Relay uses [debugpy](https://github.com/microsoft/debugpy) and [Azure Relay](https://docs.microsoft.com/en-us/azure/azure-relay/relay-what-is-it) service to create a debugging tunnel between 2 machines:
 
 1. Your local Visual Studio Code debugger in `listen` mode.
 1. Your remote code in `attach` mode.
@@ -16,7 +16,7 @@ Azure Relay carries a secure tunnel, just as if these machines were in the same 
 
 ![Azure Relay Debugging Bridge](https://raw.githubusercontent.com/vladkol/azure-debug-relay/main/images/debug-relay-diagram.png)
 
-The debugging tunnel is handled by **[Azure Relay Bridge](https://github.com/vladkol/azure-relay-bridge)** utility which is downloaded and installed automatically by Azure Debug Relay. Azure Relay Bridge can maintain secure TCP and UDP tunnels for different purposes.
+The debugging tunnel is handled by **[Azure Relay Bridge](https://github.com/vladkol/azure-relay-bridge)** utility which is downloaded and installed automatically by Azure Debugging Relay. Azure Relay Bridge can maintain secure TCP and UDP tunnels for different purposes.
 
 > We currently use a private fork of [Azure Relay Bridge](https://github.com/Azure/azure-relay-bridge) repo.
 
@@ -41,7 +41,7 @@ Azure Relay Bridge tool is a .NET Core application, so you may need  to install 
 
 **On the debugger side (usually your dev machine with Visual Studio code)**:
 
-> Install [Azure Debug Relay extension](https://marketplace.visualstudio.com/items?itemName=VladKolesnikov-vladkol.azure-debug-relay) from Visual Studio Marketplace.
+> Install [Azure Debugging Relay extension](https://marketplace.visualstudio.com/items?itemName=VladKolesnikov-vladkol.azure-debug-relay) from Visual Studio Marketplace.
 
 **On the server side**:
 
@@ -49,11 +49,11 @@ Azure Relay Bridge tool is a .NET Core application, so you may need  to install 
 
 ## Usage
 
-Before you start debugging with Azure Debug Relay, there are 3 places you configure it:
+Before you start debugging with Azure Debugging Relay, there are 3 places you configure it:
 
 1. **Azure Portal or CLI** where you create an Azure Relay resource and an Azure Hybrid Connection in it.
 1. **Local dev machine** where you run Visual Studio Code, its Python extension,
-and Azure Debug Relay extension with 2 configuration settings.
+and Azure Debugging Relay extension with 2 configuration settings.
 1. **Remote machine** where you run the same code files that open locally in VS Code,
 with 2 lines that initiate debugging session for a certain request on an execution flow.
 
@@ -134,7 +134,7 @@ Use `.azrelay.json` file in the root of your workspace as above or `.vscode/sett
 }
 ```
 
-> Whenever Azure Debug Relay VS Code extension detects non-empty `azure-debug-relay.hybrid-connection-string` and `azure-debug-relay.hybrid-connection-name` settings (`vscode/settings.json`) or `AZRELAY_CONNECTION_STRING` and `AZRELAY_CONNECTION_NAME` in `.azrelay.json` file, it launches Azure Relay Bridge every time a debugging session with debugpy in `listen` mode is about to begin. If extension settings are not empty and `.azrelay.json` is present, Azure Relay Bridge prefers values from the extension settings (`vscode/settings.json`).
+> Whenever Azure Debugging Relay VS Code extension detects non-empty `azure-debug-relay.hybrid-connection-string` and `azure-debug-relay.hybrid-connection-name` settings (`vscode/settings.json`) or `AZRELAY_CONNECTION_STRING` and `AZRELAY_CONNECTION_NAME` in `.azrelay.json` file, it launches Azure Relay Bridge every time a debugging session with debugpy in `listen` mode is about to begin. If extension settings are not empty and `.azrelay.json` is present, Azure Relay Bridge prefers values from the extension settings (`vscode/settings.json`).
 
 Visual Studio Code extension ignores `AZRELAY_CONNECTION_STRING` and `AZRELAY_CONNECTION_NAME` environment variables.
 
@@ -172,9 +172,9 @@ When debugging `remote_server_demo.py`, the debugger maps `./samples/simple_demo
 
 If everything works as it's supposed to, you will hit a breakpoint in your local Visual Studio Code.
 
-## Azure Debug Relay Python API
+## Azure Debugging Relay Python API
 
-`remote_server_demo.py` shows how you can use Azure Debug Relay (azure-debug-relay package) with your code.
+`remote_server_demo.py` shows how you can use Azure Debugging Relay (azure-debug-relay package) with your code.
 
 **azdebugrelay** module contains DebugRelay class that install and launches Azure Relay Bridge:
 

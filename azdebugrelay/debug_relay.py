@@ -40,7 +40,7 @@ class DebugRelay(object):
     relay_app_name = "azbridge"
     # `~/.azdebugrelay` installation directory
     relay_dir_name = ".azdebugrelay"
-    # current Azure Debug Relay build
+    # current Azure Debugging Relay build
     relay_version_name = "0.2.9"
     # are we running on Windows?
     is_windows = platform.platform().lower().startswith("windows")
@@ -228,7 +228,7 @@ class DebugRelay(object):
         """
         if self.relay_subprocess is not None:
             if self.is_running():
-                self.logger.info("Closing Debug Relay...")
+                self.logger.info("Closing Debugging Relay...")
                 if not DebugRelay.is_windows:
                     os.killpg(os.getpgid(self.relay_subprocess.pid), signal.SIGTERM)
                 else:
@@ -423,7 +423,7 @@ def _main(connect: bool, host: str, ports: typing.List[str] = ["5678"], connecti
         ValueError: Invalid arguments
         Exception: Cannot load configuration
     """
-    print("Debug Relay Initialization...")
+    print("Debugging Relay Initialization...")
 
     mode = DebugMode.Connect if connect else DebugMode.WaitForConnection
 
@@ -449,7 +449,7 @@ def _main(connect: bool, host: str, ports: typing.List[str] = ["5678"], connecti
                 debug_mode=mode, host=host, ports=ports)
     
     if debug_relay is None:
-        raise Exception("Cannot create a Debug Relay object. Configuration may be missing.")
+        raise Exception("Cannot create a Debugging Relay object. Configuration may be missing.")
 
     print(f"Starting Debug relay...")
     relay = debug_relay.background_launch()
@@ -498,7 +498,7 @@ def _cli_main(argv):
 
     logging.root.setLevel(logging.INFO)
     if not options.no_kill:
-        print("Closing existing Azure Debug Relay processes.")
+        print("Closing existing Azure Debugging Relay processes.")
         DebugRelay.kill_relays()
 
     if options.mode != "none":
