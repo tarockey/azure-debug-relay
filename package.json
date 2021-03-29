@@ -12,6 +12,13 @@
     "categories": [
         "Debuggers"
     ],
+    "keywords": [
+        "debug",
+        "debugging",
+        "debugger",
+        "python",
+        "remote"
+    ],
     "activationEvents": [
         "onStartupFinished",
         "workspaceContains:.azrelay.json",
