@@ -1,6 +1,6 @@
 # Azure Debugging Relay for Python
 
-Azure Debugging Relay - is a [Visual Studio Code](https://code.visualstudio.com/) extension and a Python package for distributed remote debugging. It solves a problem of debugging code in real development and production environments,
+Azure Debugging Relay is a [Visual Studio Code](https://code.visualstudio.com/) extension and a Python package for distributed remote debugging. It solves a problem of debugging code in real development and production environments,
 simultaneously across multiple nodes and in different networks.
 
 * [Azure Debugging Relay extension](https://marketplace.visualstudio.com/items?itemName=VladKolesnikov-vladkol.azure-debug-relay) on Visual Studio Marketplace
@@ -12,7 +12,7 @@ Azure Debugging Relay uses [debugpy](https://github.com/microsoft/debugpy) and [
 1. Your remote code in `attach` mode.
 
 Both machines can be isolated behind NAT or virtual networks - all they need is to be able to connect to Azure Relay resource.
-Azure Relay carries a secure tunnel, just as if these machines were in the same VPN.
+Azure Relay maintains a secure tunnel, just as if these machines were on the same machine.
 
 ![Azure Relay Debugging Bridge](https://raw.githubusercontent.com/vladkol/azure-debug-relay/main/images/debug-relay-diagram.png)
 
