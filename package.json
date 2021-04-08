@@ -45,7 +45,7 @@
                         "string"
                     ],
                     "default": "",
-                    "description": "Connection String of an Azure Relay Hybrid Connection",
+                    "description": "Connection String of an Azure Relay (Hybrid Connection)",
                     "scope": "machine-overridable"
                 },
                 "azure-debug-relay.azrelay-connection-name": {
@@ -54,7 +54,7 @@
                     ],
                     "default": "",
                     "description": "Azure Relay Hybrid Connection Name",
-                    "scope": "machine-overridable"
+                    "scope": "window"
                 }
             }
         }

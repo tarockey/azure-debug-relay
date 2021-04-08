@@ -1,7 +1,7 @@
 # Azure Debugging Relay for Python
 
-Azure Debugging Relay is a [Visual Studio Code](https://code.visualstudio.com/) extension and a Python package for distributed remote debugging. It solves a problem of debugging code in real development and production environments,
-simultaneously across multiple nodes and in different networks.
+Azure Debugging Relay is a [Visual Studio Code](https://code.visualstudio.com/) extension and a Python package for distributed remote debugging. It solves a problem of debugging code running in the cloud and on remote devices,
+simultaneously across multiple nodes and between different networks.
 
 * [Azure Debugging Relay extension](https://marketplace.visualstudio.com/items?itemName=VladKolesnikov-vladkol.azure-debug-relay) on Visual Studio Marketplace
 * [azure-debug-relay](https://pypi.org/project/azure-debug-relay/) package on PyPI
@@ -11,8 +11,9 @@ Azure Debugging Relay uses [debugpy](https://github.com/microsoft/debugpy) and [
 1. Your local Visual Studio Code debugger in `listen` mode.
 1. Your remote code in `attach` mode.
 
-Both machines can be isolated behind NAT or virtual networks - all they need is to be able to connect to Azure Relay resource.
-Azure Relay maintains a secure tunnel, just as if these machines were on the same machine.
+Both machines can be isolated behind NAT or virtual networks.
+Azure Relay maintains a secure tunnel, just as if these VS Code and a remote process you debug are running in the same `localhost` network.
+Remote components can run in any cloud, local network, with or without public internet access -- all they need is to be able to connect to Azure Relay resource.
 
 ![Azure Relay Debugging Bridge](https://raw.githubusercontent.com/vladkol/azure-debug-relay/main/images/debug-relay-diagram.png)
 
@@ -298,15 +299,6 @@ Reasons:
 A [private fork](https://github.com/vladkol/azure-relay-bridge) we are currently using is only to provide .NET Core 3.1 builds of the most recent code. There is a pending pul-requests: [one](https://github.com/Azure/azure-relay-bridge/pull/22) and [two](https://github.com/Azure/azure-relay-bridge/pull/19).
 
 ### Known issues
-
-> **Extension and python module fail complaining about `AZRELAY_CONNECTION_NAME` or `azrelay-connection-name`**.
-
-**Reason**: It is a breaking change in 0.2.0. We changed configuration and environment variables name from `AZRELAY_NAME` to `AZRELAY_CONNECTION_NAME`. VS Code extension setting names we also renamed:
-
-* `hybrid-connection-string` to **azrelay-connection-string**
-* `azrelay-connection-name` to **azrelay-connection-name**
-
-**Workaround**: Modify your `.azrelay.json`, environment variables or `.vscode/settings.json` files accordingly.
 
 > **On macOS, there may be a situation when Azure Relay Bridge (`azbridge`) cannot connect when creating a local forwarder** (`-L` option).
 

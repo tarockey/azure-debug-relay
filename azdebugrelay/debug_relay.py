@@ -451,7 +451,7 @@ def _main(connect: bool, host: str, ports: typing.List[str] = ["5678"], connecti
     if debug_relay is None:
         raise Exception("Cannot create a Debugging Relay object. Configuration may be missing.")
 
-    print(f"Starting Debug relay...")
+    print(f"Starting Debugging Relay...")
     relay = debug_relay.background_launch()
     relay.wait()
 
