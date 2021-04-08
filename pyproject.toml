@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "azure-debug-relay"
-version = "0.4.1"
-description = "Cross-network remote debugging for Python"
+version = "0.5.1"
+description = "Azure Debugging Relay: distributed cross-network remote debugging for Python"
 authors = ["Vlad Kolesnikov"]
 readme = "README.md"
 license = "MIT"

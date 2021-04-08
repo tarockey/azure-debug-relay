@@ -72,10 +72,10 @@ def _check_for_debugging(args) -> DebugRelay:
             debug_relay = DebugRelay.from_environment(debug_mode=mode)
         
         # you can also create DebugRelay directly by providing connection string and the rest of its configuration:
-        # debug_relay = DebugRelay(access_key_or_connection_string, relay_connection_name, debug_mode, hybrid_connection_url, ports)
+        # debug_relay = DebugRelay(access_key_or_connection_string, relay_connection_name, debug_mode, hybrid_connection_url, host, ports)
         
         if debug_relay is None:
-            print("Cannot create Debug Relay due to missing configuration.")
+            print("Cannot create Debugging Relay due to missing configuration.")
             return None
 
         DebugRelay.kill_relays()

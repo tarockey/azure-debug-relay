@@ -1,8 +1,8 @@
 {
     "name": "azure-debug-relay",
-    "displayName": "Azure Debug Relay",
+    "displayName": "Azure Debugging Relay",
     "description": "Distributed Debugging Extension for Python",
-    "version": "0.4.0",
+    "version": "0.5.1",
     "publisher": "VladKolesnikov-vladkol",
     "repository": "https://github.com/vladkol/azure-debug-relay",
     "engines": {
@@ -11,6 +11,13 @@
     "icon": "images/azdebugrelay-icon.png",
     "categories": [
         "Debuggers"
+    ],
+    "keywords": [
+        "debug",
+        "debugging",
+        "debugger",
+        "python",
+        "remote"
     ],
     "activationEvents": [
         "onStartupFinished",
@@ -31,14 +38,14 @@
         ],
         "configuration": {
             "type": "object",
-            "title": "Azure Debug Relay",
+            "title": "Azure Debugging Relay",
             "properties": {
                 "azure-debug-relay.azrelay-connection-string": {
                     "type": [
                         "string"
                     ],
                     "default": "",
-                    "description": "Connection String of an Azure Relay Hybrid Connection",
+                    "description": "Connection String of an Azure Relay (Hybrid Connection)",
                     "scope": "machine-overridable"
                 },
                 "azure-debug-relay.azrelay-connection-name": {
@@ -47,7 +54,7 @@
                     ],
                     "default": "",
                     "description": "Azure Relay Hybrid Connection Name",
-                    "scope": "machine-overridable"
+                    "scope": "window"
                 }
             }
         }

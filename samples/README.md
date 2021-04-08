@@ -1,4 +1,4 @@
-# Azure Debug Relay for Python: Samples
+# Azure Debugging Relay for Python: Samples
 
 1. [Simple example of remote debugging](simple_demo).
 You will need a remote machine, such as a [VM is Azure](https://ms.portal.azure.com/#create/Canonical.UbuntuServer1804LTS-ARM).
