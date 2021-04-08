@@ -163,7 +163,7 @@ class DebugRelay(object):
         else:
             self.relay_subprocess = subprocess.Popen(
                 command, 
-                creationflag = subprocess.CREATE_NEW_PROCESS_GROUP,
+                creationflags = subprocess.CREATE_NEW_PROCESS_GROUP,
                 stdin=None, stderr=subprocess.STDOUT, stdout=subprocess.PIPE,
                 shell=True, universal_newlines=True, close_fds=True)
 
