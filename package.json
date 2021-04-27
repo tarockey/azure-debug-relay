@@ -2,7 +2,7 @@
     "name": "azure-debug-relay",
     "displayName": "Azure Debugging Relay",
     "description": "Distributed Debugging Extension for Python",
-    "version": "0.5.1",
+    "version": "0.5.2",
     "publisher": "VladKolesnikov-vladkol",
     "repository": "https://github.com/vladkol/azure-debug-relay",
     "engines": {

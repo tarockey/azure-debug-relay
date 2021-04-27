@@ -9,7 +9,7 @@ def start_remote_debugging(
         debug_relay_connection_string_secret: str,
         debug_relay_connection_name:str,
         debug_port: int,
-        debugpy_connect_timeout: float = 5
+        debugpy_connect_timeout: float = 15
         ):
     # get connection string from the workspace Key Vault
     run = Run.get_context()
