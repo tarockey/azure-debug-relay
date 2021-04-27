@@ -1,4 +1,3 @@
-import { stringify } from 'querystring';
 import * as vscode from 'vscode';
 var path = require('path')
 
@@ -10,6 +9,7 @@ interface Listener {
 var pythonPath = ""
 var taskNamePrefix = "AzureRelayBridge_"
 var listeners: Array<Listener> = new Array<Listener>()
+var initialized_listeners = 0
 var azDebugRelayTaskExecution: any
 var hybridConnectionName = ""
 var hybridConnectionConnectionString = ""
@@ -43,6 +43,7 @@ function queueRelay(context: vscode.ExtensionContext, host: string, port: any) {
 }
 
 function startRelayIfCan(context: vscode.ExtensionContext) {
+    initialized_listeners = 0
     if (listeners.length > 0) {
         hasCredentialsFile = false
         vscode.workspace.findFiles(".azrelay.json").then((files: any) => {
@@ -131,9 +132,9 @@ export function activate(context: vscode.ExtensionContext) {
     });
 
     vscode.debug.onDidReceiveDebugSessionCustomEvent(async (event: vscode.DebugSessionCustomEvent) => {
-        if (event.event == "debugpyWaitingForServer") {
-            startRelayIfCan(context);
-        }
+        //if (event.event == "debugpyWaitingForServer") {
+        //    startRelayIfCan(context);
+        //}
     });
 
     vscode.debug.registerDebugAdapterTrackerFactory('python', {
@@ -143,9 +144,15 @@ export function activate(context: vscode.ExtensionContext) {
                     if (message.type !== undefined && message.command !== undefined)
                     {
                         if (message.type == "request") {
-                            if (message.command == "attach") {
+                            if (message.command == "initialize") {
+                                initialized_listeners++
+                            }
+                            else if (message.command == "attach") {
                                 if (message.arguments !== undefined && message.arguments.listen !== undefined) {
                                     queueRelay(context, message.arguments.listen.host, message.arguments.listen.port);
+                                }
+                                else {
+                                    initialized_listeners--
                                 }
                             }
                             else if (message.command == "disconnect") {
@@ -153,8 +160,15 @@ export function activate(context: vscode.ExtensionContext) {
                                     listeners.pop()
                                 }
                                 if (listeners.length == 0) {
+                                    initialized_listeners = 0
                                     stopRelay(context);
                                 }
+                            }
+                            else if (message.command == "launch") {
+                                initialized_listeners--
+                            }
+                            if (initialized_listeners > 0 && initialized_listeners == listeners.length) {
+                                startRelayIfCan(context)
                             }
                         }
                     }
