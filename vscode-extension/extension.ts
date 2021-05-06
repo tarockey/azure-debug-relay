@@ -6,7 +6,6 @@ interface Listener {
     port: string;
 }
 
-var pythonPath = ""
 var taskNamePrefix = "AzureRelayBridge_"
 var listeners: Array<Listener> = new Array<Listener>()
 var initialized_listeners = 0
@@ -36,6 +35,19 @@ function getConfigOption(): string {
     }
 
     return option
+}
+
+function getPythonPath(): string {
+    var pythonPath = "python"
+    var pythonConfig = vscode.workspace.getConfiguration("python")
+    if (pythonConfig !== undefined) {
+        var pythonPathResult = pythonConfig.get("pythonPath")
+        if (pythonPathResult !== undefined) {
+            pythonPath = pythonPathResult as string
+        }
+    }
+
+    return pythonPath
 }
 
 function queueRelay(context: vscode.ExtensionContext, host: string, port: any) {
@@ -68,6 +80,7 @@ function startRelay(context: vscode.ExtensionContext, credentialOptions: string,
     var taskType = `azdebugrelay_${host}_${portsString}`;
 
     var pythonScriptPath = path.join(context.extensionPath, "azdebugrelay", "debug_relay.py")
+    var pythonPath = getPythonPath()
     var execution =
         new vscode.ShellExecution(`"${pythonPath}" "${pythonScriptPath}" --no-kill --mode listen ` +
             `${credentialOptions} ` +
@@ -106,15 +119,6 @@ function stopRelay(_: vscode.ExtensionContext){
 
 export function activate(context: vscode.ExtensionContext) {
     console.log('Azure Relay Bridge extension activated.');
-
-    pythonPath = "python"
-    var pythonConfig = vscode.workspace.getConfiguration("python")
-    if (pythonConfig !== undefined){
-        var pythonPathResult = pythonConfig.get("pythonPath")
-        if (pythonPathResult !== undefined) {
-            pythonPath = pythonPathResult as string
-        }
-    }
 
     readConfig()
     vscode.workspace.onDidChangeConfiguration((_: any) => {
