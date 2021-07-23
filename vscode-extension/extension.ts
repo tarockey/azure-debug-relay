@@ -81,7 +81,7 @@ function startRelay(context: vscode.ExtensionContext, credentialOptions: string,
 
     var pythonScriptPath = path.join(context.extensionPath, "azdebugrelay", "debug_relay.py")
     var pythonPath = getPythonPath()
-    var execution = 
+    var execution =
         new vscode.ShellExecution(`""${pythonPath}" "${pythonScriptPath}" --no-kill --mode listen ` +
             `${credentialOptions} ` +
             `--ports ${portsArgString} --host ${host}"`);
