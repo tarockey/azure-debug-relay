@@ -241,14 +241,15 @@ def get_workspace(
     Returns:
       Workspace: a reference to a workspace
     """
-    auth = ServicePrincipalAuthentication(
-        tenant_id=tenant_id,
-        service_principal_id=app_id,
-        service_principal_password=app_secret,
-    )
-
-    # Use interactive auth as alternative
-    # auth = InteractiveLoginAuthentication()
+    
+    if tenant_id and app_id and app_secret:      
+        auth = ServicePrincipalAuthentication(
+            tenant_id=tenant_id,
+            service_principal_id=app_id,
+            service_principal_password=app_secret,
+        )
+    else:
+        auth = InteractiveLoginAuthentication()
 
     try:
         aml_workspace = Workspace.get(
