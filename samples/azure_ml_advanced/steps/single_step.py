@@ -23,10 +23,10 @@ def main():
         else:
             print("Could not connect to a debugger!")
 
-    os.makedirs("pipeline_files", exist_ok=True)
+    os.makedirs(args.pipeline_files, exist_ok=True)
 
     # Generate 100 files to use in parallel run step later
-    for i in range(0, 1000):
+    for i in range(0, 100):
         file_path = os.path.join(args.pipeline_files, f"{i}.txt")
         with open(file_path, "w") as f_handler:
             f_handler.write(f"Here is the content of the file #{i}")

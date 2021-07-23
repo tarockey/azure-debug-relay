@@ -3,7 +3,7 @@
 import sys
 import os
 from azureml.core import Workspace
-from azureml.core.authentication import ServicePrincipalAuthentication
+from azureml.core.authentication import ServicePrincipalAuthentication, InteractiveLoginAuthentication
 from azureml.exceptions import WorkspaceException
 from azureml.core.compute import AmlCompute
 from azureml.core.compute import ComputeTarget
@@ -67,8 +67,9 @@ def create_and_publish_pipeline() -> any:
         pip_packages=[
             'argparse==1.4.0',
             'azureml-core==1.22.0',
-            'debugpy==1.2.1',
-            'azure-debug-relay==0.5.1'
+            'azureml-dataset-runtime==1.22.0',
+            'debugpy==1.4.0',
+            'azure-debug-relay==0.5.1',
         ])
     batch_env = Environment(name="train-env")
     batch_env.docker.enabled = True
@@ -240,18 +241,21 @@ def get_workspace(
     Returns:
       Workspace: a reference to a workspace
     """
-    service_principal = ServicePrincipalAuthentication(
+    auth = ServicePrincipalAuthentication(
         tenant_id=tenant_id,
         service_principal_id=app_id,
         service_principal_password=app_secret,
     )
+
+    # Use interactive auth as alternative
+    # auth = InteractiveLoginAuthentication()
 
     try:
         aml_workspace = Workspace.get(
             name=name,
             subscription_id=subscription_id,
             resource_group=resource_group,
-            auth=service_principal,
+            auth=auth,
         )
 
     except WorkspaceException as exp_var:
@@ -264,7 +268,7 @@ def get_workspace(
                 resource_group=resource_group,
                 create_resource_group=True,
                 location=region,
-                auth=service_principal,
+                auth=auth,
             )
             print("Workspace %s created.", aml_workspace.name)
         else:
