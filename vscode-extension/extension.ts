@@ -81,10 +81,15 @@ function startRelay(context: vscode.ExtensionContext, credentialOptions: string,
 
     var pythonScriptPath = path.join(context.extensionPath, "azdebugrelay", "debug_relay.py")
     var pythonPath = getPythonPath()
+    var cmdLine = `"${pythonPath}" "${pythonScriptPath}" --no-kill --mode listen ` +
+        `${credentialOptions} ` +
+        `--ports ${portsArgString} --host ${host}`
+    var isWindows = process.platform === "win32";
+    if (isWindows == true) {
+        cmdLine = `"${cmdLine}"`
+    }
     var execution =
-        new vscode.ShellExecution(`""${pythonPath}" "${pythonScriptPath}" --no-kill --mode listen ` +
-            `${credentialOptions} ` +
-            `--ports ${portsArgString} --host ${host}"`);
+        new vscode.ShellExecution(`${cmdLine}`);
     var task_name = `${taskNamePrefix}${host}_${portsString}`
     var task = new vscode.Task({ type: taskType }, vscode.TaskScope.Workspace,
         task_name, "Azure Relay Bridge", execution)
