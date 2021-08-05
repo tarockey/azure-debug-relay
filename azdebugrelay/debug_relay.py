@@ -4,12 +4,12 @@ import signal
 import argparse
 import sys
 import logging
+import requests
+import tempfile
 import subprocess
 import stat
 import threading
-import urllib.request
 from pathlib import Path
-import ssl
 import platform
 import tarfile
 import time
@@ -380,19 +380,21 @@ class DebugRelay(object):
                         logging.warning(f"You are running an unsupported OS: {plat}. "\
                             "Using Debian build of Azure Relay Bridge.")
             
-            ctx = ssl.create_default_context()
-            ctx.check_hostname = False
-            ctx.verify_mode = ssl.CERT_NONE
-            
+            path: str = None
+            with requests.get(download, stream=True, verify=False) as r:
+                r.raise_for_status()
+                tmp_file, path = tempfile.mkstemp()
+                with os.fdopen(tmp_file, 'w') as tmp:
+                    for chunk in r.iter_content(chunk_size=8192):
+                        tmp.write(chunk)
             if download.lower().endswith(".zip"):
-                zip_file, _ = urllib.request.urlretrieve(download)
-                with zipfile.ZipFile(zip_file, 'r') as zip_ref:
+                with zipfile.ZipFile(path, 'r') as zip_ref:
                     zip_ref.extractall(azrelay_folder)
-                os.remove(zip_file)
             else:
-                filestream = urllib.request.urlopen(download, context=ctx)
-                with tarfile.open(fileobj=filestream, mode="r|gz") as thetarfile:
+                with tarfile.open(name=path, mode="r|gz") as thetarfile:
                     thetarfile.extractall(azrelay_folder)
+            if path:
+                os.remove(path)
 
             if not DebugRelay.is_windows:
                 st = os.stat(relay_file)
